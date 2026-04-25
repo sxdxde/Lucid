@@ -2,8 +2,15 @@
 // HCI: W1 Don't Make Users Think — search is always visible, always responsive
 import { useMemo } from 'react';
 import { useEmailStore } from '../stores/emailStore';
+import type { Email } from '../types';
 
-export function useSearch(query, filters = {}) {
+interface SearchFilters {
+  from?: string;
+  subject?: string;
+  hasAttachment?: boolean;
+}
+
+export function useSearch(query: string, filters: SearchFilters = {}): Email[] {
   const { emails } = useEmailStore();
 
   return useMemo(() => {
@@ -20,13 +27,13 @@ export function useSearch(query, filters = {}) {
 
       const matchFrom = !filters.from || email.from.email.toLowerCase().includes(filters.from.toLowerCase());
       const matchSubject = !filters.subject || email.subject.toLowerCase().includes(filters.subject.toLowerCase());
-      const matchAttachment = !filters.hasAttachment || email.attachments?.length > 0;
+      const matchAttachment = !filters.hasAttachment || (email.attachments?.length ?? 0) > 0;
       return matchQuery && matchFrom && matchSubject && matchAttachment;
     });
   }, [emails, query, filters]);
 }
 
-export function highlightMatch(text, query) {
+export function highlightMatch(text: string, query: string): string {
   if (!query || !text) return text;
   const idx = text.toLowerCase().indexOf(query.toLowerCase());
   if (idx === -1) return text;

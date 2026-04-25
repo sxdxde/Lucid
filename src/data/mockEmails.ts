@@ -1,16 +1,18 @@
 // HCI: S8 Reduce STM Load — rich mock data prevents blank states
 // HCI: N2 Match Real World — realistic email content users recognise
 
-const now = Date.now();
-const m = (mins) => new Date(now - mins * 60 * 1000).toISOString();
+import type { Account, Label, Email, Person } from '../types';
 
-export const mockAccounts = [
+const now = Date.now();
+const m = (mins: number): string => new Date(now - mins * 60 * 1000).toISOString();
+
+export const mockAccounts: Account[] = [
   { id: 'primary',  name: 'Sudarshan Sudhakar', email: 'sudarshan@lucidmail.app', avatar: 'SS', color: '#6366f1', isPrimary: true },
   { id: 'work',     name: 'Sudarshan (Work)',   email: 'sudarshan@acme.corp',      avatar: 'SW', color: '#0891b2' },
   { id: 'personal', name: 'Sudarshan Personal', email: 'sudarshan.personal@gmail.com', avatar: 'SP', color: '#059669' },
 ];
 
-export const mockLabels = [
+export const mockLabels: Label[] = [
   { id: 'inbox',    name: 'Inbox',    system: true,  color: null },
   { id: 'starred',  name: 'Starred',  system: true,  color: null },
   { id: 'sent',     name: 'Sent',     system: true,  color: null },
@@ -23,7 +25,7 @@ export const mockLabels = [
   { id: 'travel',   name: 'Travel',   system: false, color: '#7c3aed' },
 ];
 
-const people = [
+const people: Person[] = [
   { name: 'Priya Sharma',      email: 'priya.sharma@acme.corp',    avatar: 'PS', color: '#7c3aed' },
   { name: 'Arjun Mehta',       email: 'arjun.mehta@gmail.com',     avatar: 'AM', color: '#0891b2' },
   { name: 'Sarah Johnson',     email: 'sarah.j@techcorp.io',       avatar: 'SJ', color: '#059669' },
@@ -46,8 +48,7 @@ const people = [
   { name: 'Atlassian',         email: 'no-reply@atlassian.com',    avatar: 'AT', color: '#0052cc' },
 ];
 
-export const mockEmails = [
-  // Reference email — Kerala trip
+export const mockEmails: Email[] = [
   {
     id: 'e-cj', subject: 'Kerala Trip Pics',
     from: { name: 'CJ', email: 'cj@random.mail.com', avatar: 'CJ', color: '#f59e0b' },
@@ -66,7 +67,6 @@ export const mockEmails = [
     smartReplies: ['Looks great!', 'Love the photos!', 'Thanks for sharing!'],
     attachmentLabel: '17 Images',
   },
-  // Spam email
   {
     id: 'e-spam', subject: 'Please buy our product — Amazing deals you cannot miss',
     from: { name: 'SpamAlert', email: 'spam@unknown-mailer.net', avatar: 'SP', color: '#ef4444' },
@@ -444,7 +444,6 @@ Expected: Today by 8:00 PM</p>`,
 <p>The Lucid Mail Team</p>`,
     smartReplies: ['Thanks for the welcome!', 'Looks great', 'Excited to use this'],
   },
-  // Additional emails for richness
   {
     id: 'e31', subject: 'Stripe: Payment received — Rs. 12,000',
     from: people[18], to: [people[0]], account: 'work',
@@ -527,7 +526,6 @@ Expected: Today by 8:00 PM</p>`,
 <p>Nadia</p>`,
     smartReplies: ['This is very helpful!', 'Thank you, will read it', 'Citing this in my report'],
   },
-  // Draft
   {
     id: 'e21', subject: 'Draft: HCI Audit Report',
     from: people[0], to: [], account: 'primary',
@@ -537,7 +535,6 @@ Expected: Today by 8:00 PM</p>`,
     preview: 'This report documents the HCI principles applied to Lucid Mail...',
     body: `<p>This report documents the HCI principles applied to Lucid Mail and traces each design decision to a principle from the course reference.</p>`,
   },
-  // Sent
   {
     id: 'e22', subject: 'Sprint 14 kick-off — agenda attached',
     from: people[0], to: [people[1], people[12]], account: 'work',
@@ -547,7 +544,6 @@ Expected: Today by 8:00 PM</p>`,
     preview: "Team, please find the Sprint 14 kick-off agenda attached. We'll cover velocity and blockers...",
     body: `<p>Team,</p><p>Sprint 14 kick-off agenda attached. See you at 10 AM!</p>`,
   },
-  // Spam
   {
     id: 'e23', subject: '50% off your next Swiggy order — today only!',
     from: people[14], to: [people[0]], account: 'personal',
@@ -557,7 +553,6 @@ Expected: Today by 8:00 PM</p>`,
     preview: 'Use code SAVE50 for 50% off (up to Rs. 150) on your next order. Valid today only...',
     body: `<p>50% off on your next order! Use code <strong>SAVE50</strong>. Valid today only.</p>`,
   },
-  // Trash
   {
     id: 'e24', subject: 'Old project files — can we delete?',
     from: people[11], to: [people[0]], account: 'work',
@@ -569,7 +564,7 @@ Expected: Today by 8:00 PM</p>`,
   },
 ];
 
-export const mockContacts = mockEmails
+export const mockContacts: Person[] = mockEmails
   .map(e => e.from)
   .filter((v, i, arr) => arr.findIndex(p => p.email === v.email) === i)
   .filter(c => !['noreply@github.com', 'notifications@linkedin.com', 'noreply@swiggy.in', 'workspace@google.com', 'no-reply@figma.com', 'notify@notion.so'].includes(c.email));

@@ -142,6 +142,62 @@ body {
   overflow: hidden;
 }
 
+/* ── Sidebar resize handle ──────────────────────────────── */
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 32;
+  background: transparent;
+  transition: background 120ms;
+}
+.sidebar-resize-handle:hover {
+  background: rgba(26, 115, 232, 0.25);
+}
+.sidebar-resize-handle:active {
+  background: rgba(26, 115, 232, 0.4);
+}
+
+/* ── Section divider with white line + optional label ───── */
+.sidebar-section-divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px 4px;
+  flex-shrink: 0;
+}
+.sidebar-section-divider::before {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  opacity: 0.7;
+}
+.sidebar-section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  opacity: 0.7;
+}
+.sidebar-nav--expanded .sidebar-section-divider::before { flex: none; width: 0; display: none; }
+.sidebar-nav--expanded .sidebar-section-divider::after  { flex: 1; }
+.sidebar-nav--expanded .sidebar-section-divider { padding: 8px 10px 2px; }
+
+.sidebar-section-label-text {
+  font-size: .625rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* ── Compact Sidebar (matches reference) ────────────────── */
 .sidebar-compact {
   width: var(--sidebar-compact);
@@ -160,8 +216,8 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1.5px solid var(--gray-200);
-  background: white;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -425,11 +481,8 @@ body {
   position: relative;
 }
 
-/* Preview mode — blue border (HCI: N1 Visibility of system status) */
-.email-list-container--preview {
-  outline: 2px solid var(--brand-500);
-  outline-offset: -2px;
-}
+/* Preview mode — blue left accent on the selected row group only */
+.email-list-container--preview { /* no full-container outline */ }
 
 .email-list-header {
   display: flex;
@@ -456,23 +509,45 @@ body {
   position: relative;
   min-height: 56px;
 }
-.email-row:hover { background: #f5f5f5; }
-.email-row--selected { background: #e8f0fe !important; }
-.email-row--unread { background: white; }
+.email-row:hover { background: var(--gray-50); }
+.email-row--selected { background: var(--brand-50) !important; }
+.email-row--unread { background: var(--surface); }
 .email-row--spam {
   background: var(--spam-bg) !important;
 }
 .email-row--spam:hover { background: #fbd9d9 !important; }
 
+/* Selected row shows a blue left strip */
+.email-row--selected::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--brand-500);
+  border-radius: 0 2px 2px 0;
+}
+
 /* ── Inline email preview panel ─────────────────────────── */
 /* HCI: N7 Flexibility — preview mode for quick scan without full open */
-/* HCI: S8 Reduce STM Load — shows email in context */
 .email-preview-panel {
-  background: white;
-  border-top: 1px solid var(--border);
-  padding: 16px 20px;
-  animation: slideDown .15s ease-out;
+  background: var(--brand-50);
+  border-top: 1px solid var(--brand-200);
+  border-left: 3px solid var(--brand-500);
+  display: flex;
+  flex-direction: column;
+  animation: slideDown .18s ease-out;
+  max-height: 340px;  /* never covers more than ~40% of typical viewport */
+  overflow: hidden;
 }
+
+/* Truncate preview body to max 4 lines */
+.preview-body-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.preview-body-text p { margin: 0 0 .4em; }
 
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-4px); }
@@ -709,12 +784,134 @@ body {
   background: var(--surface);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: var(--shadow-xl);
-  border: 1px solid var(--gray-150);
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   width: 540px;
 }
+
+/* Compose inner sections — all theme-aware */
+.compose-fields-area {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.compose-recipient-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.compose-recipient-input {
+  flex: 1;
+  font-size: .875rem;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  padding: 4px 0;
+}
+.compose-recipient-input::placeholder { color: var(--text-placeholder); }
+
+.compose-cc-btn {
+  font-size: .75rem;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-sans);
+  transition: background 120ms;
+}
+.compose-cc-btn:hover { background: var(--gray-100); }
+
+.compose-subject-row {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  transition: background 120ms;
+}
+.compose-subject-input {
+  flex: 1;
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 10px 0;
+  font-family: var(--font-sans);
+}
+.compose-subject-input::placeholder { color: var(--text-placeholder); }
+
+.compose-warning-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(234,67,53,.08);
+  border-bottom: 1px solid rgba(234,67,53,.3);
+}
+
+.compose-body {
+  flex: 1;
+  padding: 14px 16px;
+  font-size: .875rem;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-sans);
+  line-height: 1.65;
+  min-height: 0;
+}
+.compose-body::placeholder { color: var(--text-placeholder); }
+
+.compose-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.compose-toolbar-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background 120ms;
+}
+.compose-toolbar-btn:hover { background: var(--gray-100); }
+
+/* Account pill button in TopBar */
+.account-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  cursor: pointer;
+  transition: background 120ms;
+  color: var(--text-secondary);
+}
+.account-pill:hover { background: var(--gray-100); }
 
 /* ── Email Detail V2 (matches ref3) ─────────────────────── */
 /* HCI: S4 Closure — clear full-view with back button */
@@ -722,7 +919,7 @@ body {
 .email-detail-v2 {
   display: flex;
   height: 100%;
-  background: white;
+  background: var(--surface);
   overflow: hidden;
 }
 
@@ -1230,40 +1427,26 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Sidebar (compact + expanded) ──────────────────────── */
-/* HCI: S7 Locus of Control — user toggles sidebar width */
+/* HCI: S7 Locus of Control — user resizes sidebar by dragging edge */
 .sidebar-nav {
-  width: var(--sidebar-compact);
+  /* width is set by inline style for dynamic resize */
   flex-shrink: 0;
   background: var(--surface);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 8px 0;
   overflow-y: auto;
   overflow-x: hidden;
-  transition: width 200ms cubic-bezier(.22,1,.36,1);
   z-index: 30;
   position: relative;
+  transition: none; /* no CSS transition — we do it via JS */
 }
 
 .sidebar-nav--expanded {
-  width: 220px;
   align-items: stretch;
-  padding: 8px 6px;
-}
-
-.sidebar-toggle-row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 4px 0 8px;
-  min-height: 40px;
-  justify-content: center;
-}
-
-.sidebar-nav--expanded .sidebar-toggle-row {
-  justify-content: flex-start;
-  padding: 4px 4px 8px;
+  padding: 8px 0;
 }
 
 /* Expanded compose button */
@@ -1271,12 +1454,11 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: calc(100% - 8px);
-  margin: 0 4px 4px;
+  width: 100%;
   padding: 10px 16px;
   border-radius: var(--radius-xl);
   background: var(--surface);
-  border: 1.5px solid var(--gray-200);
+  border: 1.5px solid var(--border);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   font-family: var(--font-sans);
@@ -1291,11 +1473,11 @@ body {
   border-color: var(--gray-300);
 }
 
-/* Expanded nav item — different from compact icon buttons */
+/* Expanded nav item */
 .sidebar-nav--expanded .sidebar-nav-item {
-  border-radius: var(--radius-lg);
-  padding: 8px 10px;
-  margin: 1px 0;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  margin: 1px 2px;
 }
 
 /* ── Chat panel ─────────────────────────────────────────── */
@@ -1303,7 +1485,7 @@ body {
 .chat-panel {
   position: fixed;
   bottom: 0;
-  right: 80px;
+  right: 16px; /* overridden by inline style dynamically */
   width: 360px;
   height: 480px;
   background: var(--surface);
@@ -1495,3 +1677,103 @@ html.dark .shortcut-overlay { background: rgba(0,0,0,.65); }
 
 html.dark .dropdown-item:hover { background: var(--surface-hover); }
 html.dark .unread-dot-badge { border-color: var(--surface); }
+
+/* ── Dark mode: Settings panel ──────────────────────────── */
+html.dark .settings-row { border-bottom-color: var(--border); }
+html.dark .toggle-track { background: var(--gray-200); }
+html.dark .toggle-track--on { background: var(--brand-500); }
+html.dark .option-card-active { border-color: var(--brand-400) !important; background: var(--surface-active) !important; }
+
+/* ── Account badge in All Mail ──────────────────────────── */
+.account-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* ── Archived folder nav item ───────────────────────────── */
+.sidebar-nav-item--archive-active { background: #fff3cd; color: #92400e; }
+html.dark .sidebar-nav-item--archive-active { background: #3a2d0f; color: #fcd34d; }
+
+/* ── Dark mode: Compose window ──────────────────────────── */
+html.dark .compose-fields-area,
+html.dark .compose-recipient-row,
+html.dark .compose-subject-row,
+html.dark .compose-body,
+html.dark .compose-toolbar {
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+html.dark .compose-cc-btn:hover { background: var(--surface-hover); }
+html.dark .compose-toolbar-btn:hover { background: var(--surface-hover); }
+html.dark .compose-subject-input,
+html.dark .compose-recipient-input { color: var(--text-primary); }
+html.dark .account-pill { border-color: var(--border); color: var(--text-secondary); }
+html.dark .account-pill:hover { background: var(--surface-hover); }
+
+/* ── Dark mode: Sidebar ─────────────────────────────────── */
+html.dark .sidebar-nav { border-right-color: var(--border); }
+html.dark .sidebar-section-divider::before,
+html.dark .sidebar-section-divider::after { background: var(--border); }
+html.dark .compose-expanded-btn { border-color: var(--border); }
+
+/* ── Dark mode: Email preview panel ─────────────────────── */
+html.dark .email-preview-panel {
+  background: var(--surface-active);
+  border-top-color: var(--brand-700);
+  border-left-color: var(--brand-400);
+}
+html.dark .email-row--selected { background: var(--surface-active) !important; }
+
+/* ── Dark mode: Email detail ─────────────────────────────── */
+html.dark .email-detail-v2,
+html.dark .detail-action-sidebar,
+html.dark .detail-main,
+html.dark .detail-back-btn,
+html.dark .detail-reply-area { background: var(--surface); border-color: var(--border); }
+
+/* ── Dark mode: Settings option cards ───────────────────── */
+html.dark .settings-option-card-active {
+  border-color: var(--brand-400) !important;
+  background: var(--surface-active) !important;
+}
+html.dark .settings-option-card-active p:first-child { color: var(--brand-200) !important; }
+
+/* ── TopBar white divider lines ──────────────────────────── */
+.topbar { border-bottom: 1.5px solid var(--border); }
+
+/* ── List header white line ──────────────────────────────── */
+.email-list-header { border-bottom: 1.5px solid var(--border); }
+
+/* ── White horizontal lines in email rows ────────────────── */
+.email-row { border-bottom: 1px solid var(--border); }
+
+/* ── Sidebar section dividers in dark mode ───────────────── */
+html.dark .sidebar-divider { background: var(--border); }
+
+/* ── Settings option card (theme-aware) ─────────────────── */
+.settings-option-card {
+  flex: 1;
+  padding: 20px 16px;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition: all 150ms;
+  font-family: var(--font-sans);
+}
+.settings-option-card:hover { border-color: var(--gray-300); background: var(--surface-hover); }
+.settings-option-card-active {
+  border-color: var(--brand-500) !important;
+  background: var(--brand-50) !important;
+}
+html.dark .settings-option-card { background: var(--surface); border-color: var(--border); }
+html.dark .settings-option-card:hover { background: var(--surface-hover); }
+html.dark .settings-option-card-active {
+  border-color: var(--brand-400) !important;
+  background: var(--surface-active) !important;
+}

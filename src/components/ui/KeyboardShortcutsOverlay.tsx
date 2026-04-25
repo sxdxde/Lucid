@@ -5,46 +5,51 @@ import React from 'react';
 import { useUiStore } from '../../stores/uiStore';
 import { IconClose } from './Icons';
 
-const SHORTCUT_GROUPS = [
+interface ShortcutGroup {
+  title: string;
+  shortcuts: { keys: string[]; desc: string }[];
+}
+
+const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     title: 'Navigation',
     shortcuts: [
-      { keys: ['G', 'I'],      desc: 'Go to Inbox' },
-      { keys: ['G', 'S'],      desc: 'Go to Sent' },
-      { keys: ['G', 'D'],      desc: 'Go to Drafts' },
-      { keys: ['G', 'A'],      desc: 'Go to All Mail' },
-      { keys: ['G', 'T'],      desc: 'Go to Trash' },
-      { keys: ['/'],           desc: 'Focus search' },
-      { keys: ['?'],           desc: 'Keyboard shortcuts' },
+      { keys: ['G', 'I'],        desc: 'Go to Inbox' },
+      { keys: ['G', 'S'],        desc: 'Go to Sent' },
+      { keys: ['G', 'D'],        desc: 'Go to Drafts' },
+      { keys: ['G', 'A'],        desc: 'Go to All Mail' },
+      { keys: ['G', 'T'],        desc: 'Go to Trash' },
+      { keys: ['/'],             desc: 'Focus search' },
+      { keys: ['?'],             desc: 'Keyboard shortcuts' },
     ],
   },
   {
     title: 'Compose',
     shortcuts: [
-      { keys: ['C'],           desc: 'Compose new email' },
+      { keys: ['C'],             desc: 'Compose new email' },
       { keys: ['Ctrl', 'Enter'], desc: 'Send email' },
     ],
   },
   {
     title: 'Email actions',
     shortcuts: [
-      { keys: ['E'],           desc: 'Archive' },
-      { keys: ['#'],           desc: 'Delete' },
-      { keys: ['S'],           desc: 'Star / unstar' },
-      { keys: ['Shift', 'U'], desc: 'Mark as unread' },
-      { keys: ['Shift', 'I'], desc: 'Mark as read' },
-      { keys: ['R'],           desc: 'Reply' },
-      { keys: ['A'],           desc: 'Reply all' },
-      { keys: ['F'],           desc: 'Forward' },
+      { keys: ['E'],             desc: 'Archive' },
+      { keys: ['#'],             desc: 'Delete' },
+      { keys: ['S'],             desc: 'Star / unstar' },
+      { keys: ['Shift', 'U'],    desc: 'Mark as unread' },
+      { keys: ['Shift', 'I'],    desc: 'Mark as read' },
+      { keys: ['R'],             desc: 'Reply' },
+      { keys: ['A'],             desc: 'Reply all' },
+      { keys: ['F'],             desc: 'Forward' },
     ],
   },
   {
     title: 'Selection',
     shortcuts: [
-      { keys: ['*', 'A'],      desc: 'Select all' },
-      { keys: ['*', 'N'],      desc: 'Deselect all' },
-      { keys: ['*', 'U'],      desc: 'Select unread' },
-      { keys: ['*', 'S'],      desc: 'Select starred' },
+      { keys: ['*', 'A'],        desc: 'Select all' },
+      { keys: ['*', 'N'],        desc: 'Deselect all' },
+      { keys: ['*', 'U'],        desc: 'Select unread' },
+      { keys: ['*', 'S'],        desc: 'Select starred' },
     ],
   },
 ];

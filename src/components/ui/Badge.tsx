@@ -2,7 +2,11 @@
 // HCI: S8 Reduce STM Load — user doesn't need to count unread emails
 import React from 'react';
 
-export function Badge({ count }) {
+interface BadgeProps {
+  count?: number;
+}
+
+export function Badge({ count }: BadgeProps) {
   if (!count || count === 0) return null;
   return (
     <span className="badge" style={{ fontSize: '.6875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>

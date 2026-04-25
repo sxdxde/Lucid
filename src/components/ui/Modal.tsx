@@ -4,12 +4,20 @@
 import React, { useEffect, useRef } from 'react';
 import { IconClose } from './Icons';
 
-export function Modal({ open, onClose, title, children, size = 'md' }) {
-  const dialogRef = useRef(null);
+interface ModalProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [open, onClose]);
@@ -20,7 +28,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }) {
 
   if (!open) return null;
 
-  const widths = { sm: 380, md: 500, lg: 660 };
+  const widths: Record<string, number> = { sm: 380, md: 500, lg: 660 };
 
   return (
     <div
@@ -51,7 +59,6 @@ export function Modal({ open, onClose, title, children, size = 'md' }) {
           outline: 'none',
         }}
       >
-        {/* Modal header */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '18px 22px 16px',
@@ -69,7 +76,6 @@ export function Modal({ open, onClose, title, children, size = 'md' }) {
           </button>
         </div>
 
-        {/* Modal body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px 22px' }}>
           {children}
         </div>

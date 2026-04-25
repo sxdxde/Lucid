@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useUiStore } from '../../stores/uiStore';
 import { Avatar } from '../ui/Avatar';
 import { IconClose } from '../ui/Icons';
+import type { Person } from '../../types';
 
 const BOT_REPLIES = [
   "That makes sense. Let me look into it.",
@@ -25,11 +26,20 @@ const BOT_REPLIES = [
   "Good idea, let's go with that.",
 ];
 
-function formatChatTime(ts) {
+interface ChatMessage {
+  id: number;
+  from: 'me' | 'them';
+  text: string;
+  ts: number;
+  avatar?: string;
+  color?: string;
+}
+
+function formatChatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
 }
 
-function Bubble({ msg }) {
+function Bubble({ msg }: { msg: ChatMessage }) {
   const isMe = msg.from === 'me';
   return (
     <div
@@ -77,7 +87,7 @@ function Bubble({ msg }) {
   );
 }
 
-function TypingIndicator({ contact }) {
+function TypingIndicator({ contact }: { contact: Person }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12 }}>
       <div style={{
@@ -110,13 +120,12 @@ function TypingIndicator({ contact }) {
 
 export function Chat() {
   const { chatOpen, chatContact, closeChat } = useUiStore();
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
-  const bottomRef = useRef(null);
-  const inputRef = useRef(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialise with a greeting when chat contact changes
   useEffect(() => {
     if (!chatContact) return;
     setMessages([
@@ -141,13 +150,18 @@ export function Chat() {
     if (chatOpen) setTimeout(() => inputRef.current?.focus(), 80);
   }, [chatOpen]);
 
+  const composeWindows = useUiStore(s => s.composeWindows);
+  const chatRight = composeWindows.length > 0
+    ? 16 + composeWindows.length * (548 + 8) + 16
+    : 16;
+
   if (!chatOpen || !chatContact) return null;
 
   const handleSend = () => {
     const text = input.trim();
     if (!text) return;
 
-    const userMsg = { id: Date.now(), from: 'me', text, ts: Date.now() };
+    const userMsg: ChatMessage = { id: Date.now(), from: 'me', text, ts: Date.now() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setTyping(true);
@@ -173,11 +187,11 @@ export function Chat() {
   return (
     <div
       className="chat-panel fade-up"
+      style={{ right: chatRight }}
       role="dialog"
       aria-label={`Chat with ${chatContact.name}`}
       aria-modal="false"
     >
-      {/* Header */}
       <div className="chat-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Avatar person={chatContact} size="md" />
@@ -200,14 +214,12 @@ export function Chat() {
         </button>
       </div>
 
-      {/* Messages */}
       <div className="chat-messages">
         {messages.map(msg => <Bubble key={msg.id} msg={msg} />)}
         {typing && <TypingIndicator contact={chatContact} />}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <div className="chat-input-row">
         <input
           ref={inputRef}

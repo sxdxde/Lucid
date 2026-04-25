@@ -12,6 +12,7 @@ import { useEmailStore } from '../../stores/emailStore';
 import { useUiStore } from '../../stores/uiStore';
 import { useAccountStore } from '../../stores/accountStore';
 import { useSearch } from '../../hooks/useSearch';
+import type { Label, Account, Email } from '../../types';
 
 function SkeletonRow() {
   return (
@@ -28,17 +29,24 @@ function SkeletonRow() {
   );
 }
 
-const EMPTY_STATES = {
-  inbox:   { title: 'Your inbox is empty',     desc: 'When you receive mail, it will appear here.',                       action: null },
-  starred: { title: 'No starred messages',      desc: 'Star emails you want to find again quickly.',                       action: null },
-  sent:    { title: 'Nothing sent yet',          desc: 'Emails you send will appear here.',                                action: 'Compose your first email' },
-  drafts:  { title: 'No drafts',                desc: 'Emails you save while composing will appear here.',                 action: 'Start composing' },
-  trash:   { title: 'Trash is empty',           desc: 'Deleted messages appear here and are permanently removed after 30 days.', action: null },
-  spam:    { title: 'No spam here',             desc: 'Messages marked as spam will appear here.',                         action: null },
-  allmail: { title: 'No messages',              desc: 'All your mail will appear here once you receive some.',             action: null },
+interface EmptyStateConfig {
+  title: string;
+  desc: string;
+  action: string | null;
+}
+
+const EMPTY_STATES: Record<string, EmptyStateConfig> = {
+  inbox:    { title: 'Your inbox is empty',     desc: 'When you receive mail, it will appear here.',                       action: null },
+  starred:  { title: 'No starred messages',      desc: 'Star emails you want to find again quickly.',                       action: null },
+  sent:     { title: 'Nothing sent yet',          desc: 'Emails you send will appear here.',                                action: 'Compose your first email' },
+  drafts:   { title: 'No drafts',                desc: 'Emails you save while composing will appear here.',                 action: 'Start composing' },
+  trash:    { title: 'Trash is empty',           desc: 'Deleted messages appear here and are permanently removed after 30 days.', action: null },
+  spam:     { title: 'No spam here',             desc: 'Messages marked as spam will appear here.',                         action: null },
+  allmail:  { title: 'No messages',              desc: 'All your mail will appear here once you receive some.',             action: null },
+  archived: { title: 'No archived messages',     desc: 'Emails you archive will appear here instead of your inbox.',       action: null },
 };
 
-function EmptyState({ label, searchQuery }) {
+function EmptyState({ label, searchQuery }: { label: string; searchQuery: string }) {
   const { openCompose } = useUiStore();
   if (searchQuery) {
     return (
@@ -65,12 +73,16 @@ function EmptyState({ label, searchQuery }) {
   );
 }
 
-// HCI: N1 Visibility of system status — shows active user + counts
-function WelcomeHeader({ activeAccount, customLabels, emails }) {
+interface WelcomeHeaderProps {
+  activeAccount: Account;
+  customLabels: Label[];
+  emails: Email[];
+}
+
+function WelcomeHeader({ activeAccount, customLabels, emails }: WelcomeHeaderProps) {
   const inboxCount  = emails.filter(e => e.labels.includes('inbox') && !e.isRead).length;
   const sentCount   = emails.filter(e => e.labels.includes('sent')).length;
   const draftsCount = emails.filter(e => e.labels.includes('drafts')).length;
-
   const firstName = activeAccount?.name?.split(' ')[0] ?? 'there';
 
   return (
@@ -79,11 +91,10 @@ function WelcomeHeader({ activeAccount, customLabels, emails }) {
         <Avatar person={activeAccount} size="lg" />
         <div>
           <p className="welcome-name">Welcome, {firstName}</p>
-          {/* Custom label chips — HCI: N6 Recognition over Recall */}
           {customLabels.length > 0 && (
             <div className="welcome-tags">
               {customLabels.slice(0, 4).map(l => (
-                <span key={l.id} className="welcome-tag" style={{ background: `${l.color}18`, color: l.color, borderColor: `${l.color}40` }}>
+                <span key={l.id} className="welcome-tag" style={{ background: `${l.color}18`, color: l.color ?? undefined, borderColor: `${l.color}40` }}>
                   {l.name}
                 </span>
               ))}
@@ -91,7 +102,6 @@ function WelcomeHeader({ activeAccount, customLabels, emails }) {
           )}
         </div>
       </div>
-      {/* Stat badges — HCI: S8 Reduce STM Load */}
       <div className="welcome-stats">
         <div className="welcome-stat">
           <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-600)' }}>{inboxCount}</span>
@@ -110,23 +120,31 @@ function WelcomeHeader({ activeAccount, customLabels, emails }) {
   );
 }
 
-export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }) {
-  const { emails, activeLabel, searchQuery, selectedEmailId, setSelectedEmail, trash, markRead, getEmailsByLabel, customLabels } = useEmailStore();
+interface EmailListProps {
+  onEmailSelect: (id: string) => void;
+  previewEmailId: string | null;
+  onViewDetail: (id: string) => void;
+}
+
+export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: EmailListProps) {
+  const { emails, activeLabel, searchQuery, selectedEmailId, setSelectedEmail: _setSelectedEmail, trash, markRead, getEmailsByLabel, customLabels } = useEmailStore();
   const { showToast, userPreferences } = useUiStore();
   const { getActiveAccount } = useAccountStore();
   const activeAccount = getActiveAccount();
 
   const [loading] = useState(false);
-  const [checked, setChecked] = useState(new Set());
+  const [checked, setChecked] = useState<Set<string>>(new Set());
 
   const searchResults = useSearch(searchQuery);
 
   const displayedEmails = useMemo(() => {
     if (searchQuery) return searchResults;
-    return getEmailsByLabel(activeLabel);
-  }, [emails, activeLabel, searchQuery, searchResults]);
+    // Inbox filters by active account; allmail shows everything
+    const accountId = activeLabel === 'inbox' ? activeAccount?.id : null;
+    return getEmailsByLabel(activeLabel, accountId ?? null);
+  }, [emails, activeLabel, searchQuery, searchResults, activeAccount?.id]);
 
-  const toggleCheck = (id) => {
+  const toggleCheck = (id: string) => {
     setChecked(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   };
 
@@ -143,30 +161,29 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }) {
   const handleBulkTrash = () => { trash(checkedIds); showToast({ message: `${checkedIds.length} moved to Trash`, type: 'info', undoAction: 'trash' }); setChecked(new Set()); };
   const handleBulkRead  = () => { markRead(checkedIds, true); setChecked(new Set()); };
 
-  const handleSelect = (id) => {
+  const handleSelect = (id: string) => {
     markRead([id], true);
     onEmailSelect?.(id);
   };
 
+  const LABEL_TITLES: Record<string, string> = {
+    inbox: 'Inbox', starred: 'Starred', sent: 'Sent', drafts: 'Drafts',
+    spam: 'Spam', trash: 'Trash', allmail: 'All Mail', archived: 'Archive',
+  };
   const labelTitle = searchQuery
     ? `Search: "${searchQuery}"`
-    : activeLabel === 'allmail' ? 'All Mail'
-    : activeLabel.charAt(0).toUpperCase() + activeLabel.slice(1);
-
-  // Blue border when preview is active — HCI: D1 Visibility, W4 Feature Exposure
-  const isPreviewActive = !!previewEmailId;
+    : LABEL_TITLES[activeLabel] ?? (activeLabel.charAt(0).toUpperCase() + activeLabel.slice(1));
+  const showAccountBadge = activeLabel === 'allmail';
 
   return (
     <div
-      className={`email-list-container${isPreviewActive ? ' email-list-container--preview' : ''} density-${userPreferences.density}`}
+      className={`email-list-container density-${userPreferences.density}`}
       style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--surface)' }}
     >
-      {/* Welcome header — only on inbox (HCI: N1 Visibility of system status) */}
       {activeLabel === 'inbox' && !searchQuery && (
         <WelcomeHeader activeAccount={activeAccount} customLabels={customLabels} emails={emails} />
       )}
 
-      {/* List header */}
       <div className="email-list-header">
         <button
           onClick={toggleAll}
@@ -187,7 +204,6 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }) {
         </h2>
       </div>
 
-      {/* Bulk action bar */}
       {hasChecked && (
         <div className="bulk-bar">
           <span style={{ fontSize: '.8125rem', fontWeight: 600, color: 'var(--brand-700)' }}>{checkedIds.length} selected</span>
@@ -205,7 +221,6 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }) {
         </div>
       )}
 
-      {/* Email list */}
       <div style={{ flex: 1, overflowY: 'auto' }} role="list" aria-label="Email list">
         {loading ? (
           Array.from({ length: 8 }, (_, i) => <SkeletonRow key={i} />)
@@ -222,6 +237,7 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }) {
               onSelect={handleSelect}
               onCheck={toggleCheck}
               onViewDetail={onViewDetail}
+              showAccountBadge={showAccountBadge}
             />
           ))
         )}

@@ -13,9 +13,9 @@ import { useEmailStore } from '../stores/emailStore';
 import { useAccountStore } from '../stores/accountStore';
 import { Avatar } from '../components/ui/Avatar';
 import { SHORTCUT_DEFS } from '../hooks/useKeyboard';
+import type { UserPreferences, Label, Account } from '../types';
 
-// ── Inline SVG icons for settings tabs ──────────────────────
-function IconPalette({ size = 20 }) {
+function IconPalette({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="10" cy="10" r="7" />
@@ -25,7 +25,7 @@ function IconPalette({ size = 20 }) {
     </svg>
   );
 }
-function IconBellS({ size = 20 }) {
+function IconBellS({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M10 2a6 6 0 016 6c0 2.5.5 4 2 5H2c1.5-1 2-2.5 2-5a6 6 0 016-6z" />
@@ -33,7 +33,7 @@ function IconBellS({ size = 20 }) {
     </svg>
   );
 }
-function IconUser({ size = 20 }) {
+function IconUser({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="10" cy="7" r="4" />
@@ -41,16 +41,30 @@ function IconUser({ size = 20 }) {
     </svg>
   );
 }
-function IconPen({ size = 20 }) {
+function IconPen({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M13.5 3.5l3 3L7 16H4v-3L13.5 3.5z" />
     </svg>
   );
 }
+function IconTagS({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3h6l8 8-6 6-8-8V3z" />
+      <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
-// ── Reusable sub-components ──────────────────────────────────
-function ToggleSwitch({ value, onChange, label, id }) {
+interface ToggleSwitchProps {
+  value: boolean;
+  onChange: (val: boolean) => void;
+  label: string;
+  id?: string;
+}
+
+function ToggleSwitch({ value, onChange, label, id }: ToggleSwitchProps) {
   return (
     <button
       role="switch"
@@ -65,7 +79,14 @@ function ToggleSwitch({ value, onChange, label, id }) {
   );
 }
 
-function SettingsRow({ label, description, children, htmlFor }) {
+interface SettingsRowProps {
+  label: string;
+  description?: string;
+  children: React.ReactNode;
+  htmlFor?: string;
+}
+
+function SettingsRow({ label, description, children, htmlFor }: SettingsRowProps) {
   return (
     <div className="settings-row">
       <label htmlFor={htmlFor} style={{ flex: 1, minWidth: 0, cursor: htmlFor ? 'pointer' : 'default' }}>
@@ -77,7 +98,12 @@ function SettingsRow({ label, description, children, htmlFor }) {
   );
 }
 
-function SegmentedControl({ options, value, onChange }) {
+interface SegmentedControlOption {
+  value: string;
+  label: string;
+}
+
+function SegmentedControl({ options, value, onChange }: { options: SegmentedControlOption[]; value: string; onChange: (v: string) => void }) {
   return (
     <div style={{ display: 'flex', background: 'var(--gray-100)', borderRadius: 'var(--radius-sm)', padding: 3, gap: 2 }}>
       {options.map(opt => (
@@ -85,13 +111,8 @@ function SegmentedControl({ options, value, onChange }) {
           key={opt.value}
           onClick={() => onChange(opt.value)}
           style={{
-            padding: '6px 14px',
-            borderRadius: 'var(--radius-xs)',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '.8125rem',
-            fontWeight: 500,
-            transition: 'all 140ms',
+            padding: '6px 14px', borderRadius: 'var(--radius-xs)', border: 'none', cursor: 'pointer',
+            fontSize: '.8125rem', fontWeight: 500, transition: 'all 140ms',
             background: value === opt.value ? 'white' : 'transparent',
             color: value === opt.value ? 'var(--brand-600)' : 'var(--text-muted)',
             boxShadow: value === opt.value ? '0 1px 3px rgba(0,0,0,.12)' : 'none',
@@ -104,18 +125,16 @@ function SegmentedControl({ options, value, onChange }) {
   );
 }
 
-// ── Shortcut key badge — click to remap ─────────────────────
-function ShortcutBadge({ value, onRemap }) {
+function ShortcutBadge({ value, onRemap }: { value: string; onRemap: (k: string) => void }) {
   const [listening, setListening] = useState(false);
-  const ref = useRef(null);
+  const ref = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!listening) return;
-    const handler = (e) => {
+    const handler = (e: KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (e.key === 'Escape') { setListening(false); return; }
-      // Accept printable single chars or # / special
       const k = e.key.length === 1 ? e.key.toLowerCase() : null;
       if (k) { onRemap(k); setListening(false); }
     };
@@ -135,20 +154,13 @@ function ShortcutBadge({ value, onRemap }) {
       onClick={() => setListening(l => !l)}
       title={listening ? 'Press a new key… (Esc to cancel)' : 'Click to remap'}
       style={{
-        padding: '3px 10px',
-        borderRadius: 'var(--radius-xs)',
+        padding: '3px 10px', borderRadius: 'var(--radius-xs)',
         border: `1.5px solid ${listening ? 'var(--brand-500)' : 'var(--gray-200)'}`,
         background: listening ? 'var(--brand-50)' : 'var(--gray-25)',
         color: listening ? 'var(--brand-600)' : 'var(--text-primary)',
-        fontSize: '.75rem',
-        fontWeight: 700,
-        letterSpacing: '.06em',
-        cursor: 'pointer',
-        fontFamily: 'var(--font-sans)',
-        transition: 'all 120ms',
-        minWidth: 32,
-        textAlign: 'center',
-        outline: 'none',
+        fontSize: '.75rem', fontWeight: 700, letterSpacing: '.06em',
+        cursor: 'pointer', fontFamily: 'var(--font-sans)', transition: 'all 120ms',
+        minWidth: 32, textAlign: 'center', outline: 'none',
       }}
       aria-label={`Current shortcut: ${display}. Click to change.`}
     >
@@ -157,42 +169,35 @@ function ShortcutBadge({ value, onRemap }) {
   );
 }
 
-function IconTag({ size = 20 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 3h6l8 8-6 6-8-8V3z" />
-      <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
+interface TabDef {
+  id: string;
+  label: string;
+  Icon: React.ComponentType<{ size?: number; className?: string }>;
 }
 
-// ── Tab definitions ──────────────────────────────────────────
-const TABS = [
+const TABS: TabDef[] = [
   { id: 'appearance',    label: 'Appearance',    Icon: IconPalette },
   { id: 'notifications', label: 'Notifications', Icon: IconBellS   },
-  { id: 'shortcuts',     label: 'Shortcuts',     Icon: () => <IconKeyboard className="w-5 h-5" /> },
-  { id: 'tags',          label: 'Tags',          Icon: IconTag     },
+  { id: 'shortcuts',     label: 'Shortcuts',     Icon: ({ className }) => <IconKeyboard className={className ?? 'w-5 h-5'} /> },
+  { id: 'tags',          label: 'Tags',          Icon: IconTagS    },
   { id: 'accounts',      label: 'Accounts',      Icon: IconUser    },
   { id: 'signature',     label: 'Signature',     Icon: IconPen     },
 ];
 
 const SHORTCUT_CATEGORIES = [...new Set(SHORTCUT_DEFS.map(s => s.category))];
 
-// ── Tab panels ───────────────────────────────────────────────
-function OptionCard({ label, desc, active, onClick }) {
+interface OptionCardProps {
+  label: string;
+  desc: string;
+  active: boolean;
+  onClick: () => void;
+}
+
+function OptionCard({ label, desc, active, onClick }: OptionCardProps) {
   return (
     <button
       onClick={onClick}
-      style={{
-        flex: 1,
-        padding: '20px 16px',
-        borderRadius: 'var(--radius-lg)',
-        border: `2px solid ${active ? 'var(--brand-500)' : 'var(--border)'}`,
-        background: active ? 'var(--brand-50)' : 'var(--surface)',
-        cursor: 'pointer',
-        textAlign: 'left',
-        transition: 'all 150ms',
-      }}
+      className={active ? 'settings-option-card settings-option-card-active' : 'settings-option-card'}
     >
       <p style={{ margin: '0 0 4px', fontSize: '.875rem', fontWeight: 600, color: active ? 'var(--brand-600)' : 'var(--text-primary)' }}>{label}</p>
       <p style={{ margin: 0, fontSize: '.75rem', color: 'var(--text-muted)' }}>{desc}</p>
@@ -206,7 +211,12 @@ function OptionCard({ label, desc, active, onClick }) {
   );
 }
 
-function AppearanceTab({ pref, setPreference }) {
+interface AppearanceTabProps {
+  pref: UserPreferences;
+  setPreference: (key: keyof UserPreferences, value: UserPreferences[keyof UserPreferences]) => void;
+}
+
+function AppearanceTab({ pref, setPreference }: AppearanceTabProps) {
   return (
     <div>
       <div style={{ marginBottom: 40 }}>
@@ -243,19 +253,19 @@ function AppearanceTab({ pref, setPreference }) {
 
 function NotificationsTab() {
   const [notif, setNotif] = useState({ inbox: true, mentioned: true, quietHours: false, sounds: false });
-  const toggle = (k) => setNotif(n => ({ ...n, [k]: !n[k] }));
+  const toggle = (k: keyof typeof notif) => setNotif(n => ({ ...n, [k]: !n[k] }));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       <h3 style={sectionTitle}>Email notifications</h3>
       <p style={{ ...sectionDesc, marginBottom: 28 }}>Control which events trigger browser notifications.</p>
 
-      {[
-        { key: 'inbox',      label: 'New mail in Inbox',    desc: 'Show a notification for incoming emails' },
-        { key: 'mentioned',  label: 'When mentioned',       desc: 'Notify when your name appears in an email' },
-        { key: 'quietHours', label: 'Quiet hours',          desc: 'Silence all notifications from 10 PM – 8 AM' },
-        { key: 'sounds',     label: 'Notification sounds',  desc: 'Play a sound when a new email arrives' },
-      ].map(item => (
+      {([
+        { key: 'inbox' as const,      label: 'New mail in Inbox',    desc: 'Show a notification for incoming emails' },
+        { key: 'mentioned' as const,  label: 'When mentioned',       desc: 'Notify when your name appears in an email' },
+        { key: 'quietHours' as const, label: 'Quiet hours',          desc: 'Silence all notifications from 10 PM – 8 AM' },
+        { key: 'sounds' as const,     label: 'Notification sounds',  desc: 'Play a sound when a new email arrives' },
+      ]).map(item => (
         <SettingsRow key={item.key} label={item.label} description={item.desc} htmlFor={`notif-${item.key}`}>
           <ToggleSwitch id={`notif-${item.key}`} value={notif[item.key]} onChange={() => toggle(item.key)} label={item.label} />
         </SettingsRow>
@@ -264,7 +274,13 @@ function NotificationsTab() {
   );
 }
 
-function ShortcutsTab({ pref, setPreference, resetShortcuts }) {
+interface ShortcutsTabProps {
+  pref: UserPreferences;
+  setPreference: (key: keyof UserPreferences, value: UserPreferences[keyof UserPreferences]) => void;
+  resetShortcuts: () => void;
+}
+
+function ShortcutsTab({ pref, setPreference, resetShortcuts }: ShortcutsTabProps) {
   const sc = pref.customShortcuts ?? {};
   const { setCustomShortcut } = useUiStore();
 
@@ -303,11 +319,9 @@ function ShortcutsTab({ pref, setPreference, resetShortcuts }) {
               <div
                 key={def.id}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '14px 20px',
-                  background: i % 2 === 0 ? 'white' : 'var(--gray-25)',
+                  background: i % 2 === 0 ? 'var(--surface)' : 'var(--surface-subtle)',
                   borderBottom: i < arr.length - 1 ? '1px solid var(--gray-100)' : 'none',
                 }}
               >
@@ -325,7 +339,6 @@ function ShortcutsTab({ pref, setPreference, resetShortcuts }) {
   );
 }
 
-// ── Tags (custom labels) tab ─────────────────────────────────
 const PRESET_COLORS = [
   '#ef4444', '#f97316', '#eab308', '#22c55e',
   '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899',
@@ -342,8 +355,7 @@ function TagsTab() {
     const trimmed = name.trim();
     if (!trimmed) { setError('Tag name is required.'); return; }
     if (customLabels.some(l => l.name.toLowerCase() === trimmed.toLowerCase())) {
-      setError('A tag with this name already exists.');
-      return;
+      setError('A tag with this name already exists.'); return;
     }
     createLabel({ id: `tag-${Date.now()}`, name: trimmed, color, system: false });
     setName('');
@@ -358,17 +370,8 @@ function TagsTab() {
         Delete removes the tag — emails keep their other labels.
       </p>
 
-      {/* Create new tag form */}
-      <div style={{
-        padding: '24px',
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
-        marginBottom: 28,
-      }}>
-        <p style={{ margin: '0 0 16px', fontSize: '.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-          Create a new tag
-        </p>
+      <div style={{ padding: '24px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: 28 }}>
+        <p style={{ margin: '0 0 16px', fontSize: '.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>Create a new tag</p>
 
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 180 }}>
@@ -407,11 +410,8 @@ function TagsTab() {
           </button>
         </div>
 
-        {/* Color picker */}
         <div style={{ marginTop: 16 }}>
-          <p style={{ margin: '0 0 8px', fontSize: '.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-            Choose a color
-          </p>
+          <p style={{ margin: '0 0 8px', fontSize: '.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>Choose a color</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {PRESET_COLORS.map(c => (
               <button
@@ -430,22 +430,16 @@ function TagsTab() {
           </div>
         </div>
 
-        {/* Preview */}
         {name.trim() && (
           <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <p style={{ margin: 0, fontSize: '.75rem', color: 'var(--text-muted)' }}>Preview:</p>
-            <span style={{
-              padding: '3px 12px', borderRadius: 'var(--radius-pill)',
-              background: `${color}18`, color, border: `1px solid ${color}40`,
-              fontSize: '.75rem', fontWeight: 600,
-            }}>
+            <span style={{ padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: `${color}18`, color, border: `1px solid ${color}40`, fontSize: '.75rem', fontWeight: 600 }}>
               {name.trim()}
             </span>
           </div>
         )}
       </div>
 
-      {/* Existing tags */}
       {customLabels.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: '.875rem' }}>
           No tags yet — create your first tag above.
@@ -453,35 +447,15 @@ function TagsTab() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {customLabels.map(label => (
-            <div key={label.id} style={{
-              display: 'flex', alignItems: 'center', gap: 14,
-              padding: '14px 20px', background: 'var(--surface)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
-              boxShadow: 'var(--shadow-xs)',
-            }}>
-              <span style={{
-                width: 12, height: 12, borderRadius: '50%',
-                background: label.color, flexShrink: 0,
-              }} />
-              <span style={{
-                padding: '3px 12px', borderRadius: 'var(--radius-pill)',
-                background: `${label.color}18`, color: label.color,
-                border: `1px solid ${label.color}40`,
-                fontSize: '.8125rem', fontWeight: 600,
-              }}>
+            <div key={label.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-xs)' }}>
+              <span style={{ width: 12, height: 12, borderRadius: '50%', background: label.color ?? undefined, flexShrink: 0 }} />
+              <span style={{ padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: `${label.color}18`, color: label.color ?? undefined, border: `1px solid ${label.color}40`, fontSize: '.8125rem', fontWeight: 600 }}>
                 {label.name}
               </span>
-              <span style={{ marginLeft: 'auto', fontSize: '.75rem', color: 'var(--text-muted)' }}>
-                {label.color}
-              </span>
+              <span style={{ marginLeft: 'auto', fontSize: '.75rem', color: 'var(--text-muted)' }}>{label.color}</span>
               <button
                 onClick={() => deleteLabel(label.id)}
-                style={{
-                  padding: '5px 12px', borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border)', background: 'transparent',
-                  color: 'var(--danger)', fontSize: '.75rem', fontWeight: 600,
-                  cursor: 'pointer', transition: 'all 120ms',
-                }}
+                style={{ padding: '5px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'transparent', color: 'var(--danger)', fontSize: '.75rem', fontWeight: 600, cursor: 'pointer', transition: 'all 120ms' }}
                 onMouseOver={e => { e.currentTarget.style.background = '#fff5f4'; }}
                 onMouseOut={e => { e.currentTarget.style.background = 'transparent'; }}
                 aria-label={`Delete tag ${label.name}`}
@@ -496,7 +470,12 @@ function TagsTab() {
   );
 }
 
-function AccountsTab({ accounts, signOutAccount }) {
+interface AccountsTabProps {
+  accounts: Account[];
+  signOutAccount: (id: string) => void;
+}
+
+function AccountsTab({ accounts, signOutAccount }: AccountsTabProps) {
   return (
     <div>
       <h3 style={sectionTitle}>Signed-in accounts</h3>
@@ -504,39 +483,20 @@ function AccountsTab({ accounts, signOutAccount }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {accounts.map(acc => (
-          <div key={acc.id} style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            padding: '20px 24px',
-            background: 'white',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-lg)',
-            boxShadow: 'var(--shadow-xs)',
-          }}>
+          <div key={acc.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 24px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-xs)' }}>
             <Avatar person={acc} size="lg" />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <p style={{ margin: 0, fontSize: '.9375rem', fontWeight: 600, color: 'var(--text-primary)' }}>{acc.name}</p>
                 {acc.isPrimary && (
-                  <span style={{
-                    padding: '1px 8px', borderRadius: 'var(--radius-pill)',
-                    background: 'var(--brand-50)', color: 'var(--brand-600)',
-                    fontSize: '.6875rem', fontWeight: 700, letterSpacing: '.04em',
-                  }}>Primary</span>
+                  <span style={{ padding: '1px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--brand-50)', color: 'var(--brand-600)', fontSize: '.6875rem', fontWeight: 700, letterSpacing: '.04em' }}>Primary</span>
                 )}
               </div>
               <p style={{ margin: '3px 0 0', fontSize: '.8125rem', color: 'var(--text-muted)' }}>{acc.email}</p>
             </div>
             <button
               onClick={() => signOutAccount(acc.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 16px', fontSize: '.8125rem', fontWeight: 600,
-                color: 'var(--danger)', background: '#fff5f4',
-                border: '1.5px solid #fecaca', borderRadius: 'var(--radius-md)',
-                cursor: 'pointer', transition: 'all 120ms', flexShrink: 0,
-              }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', fontSize: '.8125rem', fontWeight: 600, color: 'var(--danger)', background: '#fff5f4', border: '1.5px solid #fecaca', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all 120ms', flexShrink: 0 }}
               onMouseOver={e => { e.currentTarget.style.background = '#fde8e8'; }}
               onMouseOut={e => { e.currentTarget.style.background = '#fff5f4'; }}
               aria-label={`Sign out of ${acc.name}`}
@@ -562,22 +522,8 @@ function SignatureTab() {
         value={signature}
         onChange={e => setSignature(e.target.value)}
         rows={6}
-        placeholder="Write your email signature here…&#10;&#10;e.g.  Sudarshan Sudhakar&#10;       sudarshan@email.com"
-        style={{
-          width: '100%',
-          padding: '16px 18px',
-          fontSize: '.9375rem',
-          background: 'white',
-          border: '1.5px solid var(--border)',
-          borderRadius: 'var(--radius-lg)',
-          color: 'var(--text-primary)',
-          outline: 'none',
-          fontFamily: 'var(--font-sans)',
-          lineHeight: 1.7,
-          resize: 'vertical',
-          transition: 'border-color 120ms',
-          boxShadow: 'var(--shadow-xs)',
-        }}
+        placeholder={"Write your email signature here…\n\ne.g.  Sudarshan Sudhakar\n       sudarshan@email.com"}
+        style={{ width: '100%', padding: '16px 18px', fontSize: '.9375rem', background: 'var(--surface)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', color: 'var(--text-primary)', outline: 'none', fontFamily: 'var(--font-sans)', lineHeight: 1.7, resize: 'vertical', transition: 'border-color 120ms', boxShadow: 'var(--shadow-xs)' }}
         onFocus={e => { e.target.style.borderColor = 'var(--brand-500)'; }}
         onBlur={e => { e.target.style.borderColor = 'var(--border)'; }}
         aria-label="Email signature"
@@ -597,44 +543,29 @@ function SignatureTab() {
   );
 }
 
-// ── Shared styles ────────────────────────────────────────────
-const sectionTitle = {
-  margin: '0 0 4px',
-  fontSize: '1rem',
-  fontWeight: 600,
-  color: 'var(--text-primary)',
+const sectionTitle: React.CSSProperties = {
+  margin: '0 0 4px', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)',
 };
-const sectionDesc = {
-  margin: 0,
-  fontSize: '.875rem',
-  color: 'var(--text-muted)',
-  lineHeight: 1.55,
+const sectionDesc: React.CSSProperties = {
+  margin: 0, fontSize: '.875rem', color: 'var(--text-muted)', lineHeight: 1.55,
 };
 
-// ── Main Settings component ──────────────────────────────────
-export function Settings({ onBack }) {
+interface SettingsProps {
+  onBack: () => void;
+  initialTab?: string;
+}
+
+export function Settings({ onBack, initialTab }: SettingsProps) {
   const { userPreferences, setPreference, resetShortcuts } = useUiStore();
   const { accounts, signOutAccount } = useAccountStore();
-  const [activeTab, setActiveTab] = useState('appearance');
+  const [activeTab, setActiveTab] = useState(initialTab ?? 'appearance');
 
   const pref = userPreferences;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--gray-25)' }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '16px 32px',
-        background: 'white',
-        borderBottom: '1px solid var(--border)',
-        flexShrink: 0,
-      }}>
-        <button
-          className="icon-btn"
-          onClick={onBack}
-          aria-label="Back to inbox"
-          style={{ color: 'var(--text-secondary)' }}
-        >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 32px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+        <button className="icon-btn" onClick={onBack} aria-label="Back to inbox" style={{ color: 'var(--text-secondary)' }}>
           <IconArrowLeft className="w-5 h-5" />
         </button>
         <div>
@@ -643,22 +574,9 @@ export function Settings({ onBack }) {
         </div>
       </div>
 
-      {/* Two-column layout */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
-
-        {/* Left tab rail */}
         <nav
-          style={{
-            width: 200,
-            flexShrink: 0,
-            padding: '24px 12px',
-            borderRight: '1px solid var(--border)',
-            background: 'white',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-            overflowY: 'auto',
-          }}
+          style={{ width: 200, flexShrink: 0, padding: '24px 12px', borderRight: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}
           aria-label="Settings sections"
         >
           {TABS.map(({ id, label, Icon }) => {
@@ -668,21 +586,7 @@ export function Settings({ onBack }) {
                 key={id}
                 onClick={() => setActiveTab(id)}
                 aria-current={isActive ? 'page' : undefined}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 14px',
-                  borderRadius: 'var(--radius-md)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 100ms',
-                  background: isActive ? 'var(--brand-50)' : 'transparent',
-                  color: isActive ? 'var(--brand-600)' : 'var(--text-secondary)',
-                  fontWeight: isActive ? 600 : 400,
-                  fontSize: '.875rem',
-                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'all 100ms', background: isActive ? 'var(--brand-50)' : 'transparent', color: isActive ? 'var(--brand-600)' : 'var(--text-secondary)', fontWeight: isActive ? 600 : 400, fontSize: '.875rem' }}
                 onMouseOver={e => { if (!isActive) e.currentTarget.style.background = 'var(--gray-100)'; }}
                 onMouseOut={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
               >
@@ -693,7 +597,6 @@ export function Settings({ onBack }) {
           })}
         </nav>
 
-        {/* Right content panel */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '40px 48px', maxWidth: 760 }}>
           {activeTab === 'appearance'    && <AppearanceTab pref={pref} setPreference={setPreference} />}
           {activeTab === 'notifications' && <NotificationsTab />}

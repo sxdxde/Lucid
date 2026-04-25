@@ -3,8 +3,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { mockAccounts } from '../data/mockEmails';
+import type { Account } from '../types';
 
-export const useAccountStore = create(
+interface AccountStore {
+  accounts: Account[];
+  activeAccountId: string;
+
+  switchAccount: (id: string) => void;
+  signOutAccount: (id: string) => void;
+  getActiveAccount: () => Account;
+}
+
+export const useAccountStore = create<AccountStore>()(
   persist(
     (set, get) => ({
       accounts: mockAccounts,
@@ -19,7 +29,7 @@ export const useAccountStore = create(
         set(state => {
           const remaining = state.accounts.filter(a => a.id !== id);
           const newActive = state.activeAccountId === id
-            ? (remaining[0]?.id ?? null)
+            ? (remaining[0]?.id ?? '')
             : state.activeAccountId;
           return { accounts: remaining, activeAccountId: newActive };
         });

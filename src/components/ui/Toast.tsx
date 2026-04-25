@@ -5,15 +5,15 @@ import React from 'react';
 import { useUiStore } from '../../stores/uiStore';
 import { useEmailStore } from '../../stores/emailStore';
 import { IconClose, IconCheck } from './Icons';
+import type { Toast as ToastType } from '../../types';
 
-function ToastIcon({ type }) {
+function ToastIcon({ type }: { type: string }) {
   if (type === 'success') return <IconCheck className="w-4 h-4" style={{ color: 'var(--success)' }} />;
   if (type === 'error') return (
     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round">
       <circle cx="10" cy="10" r="8" /><path d="M10 6v4M10 13h.01" />
     </svg>
   );
-  // Info / default — small mail icon in brand color
   return (
     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="var(--brand-500)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="4" width="16" height="12" rx="2" /><path d="M2 7l8 5 8-5" />
@@ -21,7 +21,7 @@ function ToastIcon({ type }) {
   );
 }
 
-function Toast({ toast }) {
+function Toast({ toast }: { toast: ToastType }) {
   const { dismissToast } = useUiStore();
   const { undoLastAction } = useEmailStore();
 

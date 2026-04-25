@@ -14,18 +14,32 @@ import { useEmailStore } from '../../stores/emailStore';
 import { useUiStore } from '../../stores/uiStore';
 import { Avatar } from '../ui/Avatar';
 import { Tooltip } from '../ui/Tooltip';
+import type { Email } from '../../types';
 
-function formatFullDate(ts) {
+function formatFullDate(ts: string): string {
   return new Date(ts).toLocaleString('en', {
     weekday: 'short', year: 'numeric', month: 'short',
     day: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 }
 
-// Left action sidebar — only Delete is the primary destructive action
-// HCI: G3 Proximity, L3 Fitts' Law, N5 Error Prevention (delete = explicit red)
-function ActionSidebar({ email, onTrash, onToggleStar }) {
-  const actions = [
+interface ActionDef {
+  icon: React.ComponentType<{ className?: string; filled?: boolean; style?: React.CSSProperties }>;
+  label: string;
+  onClick: () => void;
+  active: boolean;
+  activeColor?: string;
+  danger?: boolean;
+}
+
+interface ActionSidebarProps {
+  email: Email;
+  onTrash: () => void;
+  onToggleStar: () => void;
+}
+
+function ActionSidebar({ email, onTrash, onToggleStar }: ActionSidebarProps) {
+  const actions: ActionDef[] = [
     { icon: IconStar,          label: email.isStarred ? 'Unstar' : 'Star', onClick: onToggleStar, active: email.isStarred, activeColor: '#f59e0b' },
     { icon: IconTrash,         label: 'Delete — moves to Trash (30 days to recover)', onClick: onTrash, active: false, activeColor: '#ef4444', danger: true },
     { icon: IconAlertTriangle, label: 'Report spam',  onClick: () => {}, active: false },
@@ -36,7 +50,7 @@ function ActionSidebar({ email, onTrash, onToggleStar }) {
 
   return (
     <div className="detail-action-sidebar">
-      {actions.map(({ icon: Icon, label, onClick, active, activeColor }) => (
+      {actions.map(({ icon: Icon, label, onClick, active, activeColor, danger }) => (
         <Tooltip key={label} content={label} side="right">
           <button
             className="detail-action-btn"
@@ -52,8 +66,13 @@ function ActionSidebar({ email, onTrash, onToggleStar }) {
   );
 }
 
-// Inline reply composer — HCI: N3 User Control, S5 Reversibility
-function ReplyComposer({ email, onClose, onSend }) {
+interface ReplyComposerProps {
+  email: Email;
+  onClose: () => void;
+  onSend: (body: string) => void;
+}
+
+function ReplyComposer({ email, onClose, onSend }: ReplyComposerProps) {
   const [body, setBody] = useState('');
 
   return (
@@ -71,7 +90,6 @@ function ReplyComposer({ email, onClose, onSend }) {
         style={{ width: '100%', minHeight: 100, resize: 'vertical', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', fontSize: '.875rem', fontFamily: 'var(--font-sans)', outline: 'none', color: 'var(--text-primary)', lineHeight: 1.6 }}
         aria-label="Reply body"
       />
-      {/* Toolbar */}
       <div className="detail-reply-toolbar">
         <button
           className="btn btn-primary"
@@ -90,7 +108,12 @@ function ReplyComposer({ email, onClose, onSend }) {
   );
 }
 
-export function EmailDetail({ emailId, onBack }) {
+interface EmailDetailProps {
+  emailId: string | null;
+  onBack: () => void;
+}
+
+export function EmailDetail({ emailId, onBack }: EmailDetailProps) {
   const { emails, trash, toggleStar } = useEmailStore();
   const { openCompose, showToast } = useUiStore();
   const [replyOpen, setReplyOpen] = useState(false);
@@ -136,7 +159,7 @@ export function EmailDetail({ emailId, onBack }) {
     setForwardOpen(false);
   };
 
-  const handleSmartReply = (reply) => {
+  const handleSmartReply = (reply: string) => {
     openCompose({
       to: email.from.email,
       subject: email.subject.startsWith('Re:') ? email.subject : `Re: ${email.subject}`,
@@ -146,25 +169,20 @@ export function EmailDetail({ emailId, onBack }) {
 
   return (
     <div className="email-detail-v2">
-      {/* Left action sidebar — HCI: G3 Proximity, L3 Fitts' Law */}
       <ActionSidebar
         email={email}
         onTrash={handleTrash}
         onToggleStar={() => toggleStar(email.id)}
       />
 
-      {/* Main content */}
       <div className="detail-main">
-        {/* Back button */}
         <button className="detail-back-btn" onClick={onBack} aria-label="Back to inbox">
           <IconArrowLeft className="w-4 h-4" />
           <span>Back</span>
         </button>
 
-        {/* Subject */}
         <h1 className="detail-subject">{email.subject}</h1>
 
-        {/* Sender section */}
         <div className="detail-sender-section">
           <Avatar person={email.from} size="lg" />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -180,7 +198,6 @@ export function EmailDetail({ emailId, onBack }) {
           </div>
         </div>
 
-        {/* Spam warning bar */}
         {email.isSpamDetected && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#fff3f3', border: '1px solid #fecdd3', borderRadius: 'var(--radius-md)', marginBottom: 16 }}>
             <IconAlertTriangle className="w-4 h-4" style={{ color: '#ef4444', flexShrink: 0 }} />
@@ -188,7 +205,6 @@ export function EmailDetail({ emailId, onBack }) {
           </div>
         )}
 
-        {/* Body + image grid side-by-side — HCI: G1 Figure/Ground, G4 Similarity */}
         <div className="detail-body-row">
           <div
             className="email-body"
@@ -216,7 +232,6 @@ export function EmailDetail({ emailId, onBack }) {
           )}
         </div>
 
-        {/* Attachment badge */}
         {email.attachmentLabel && (
           <div style={{ marginBottom: 16 }}>
             <span className="attachment-badge">
@@ -226,10 +241,9 @@ export function EmailDetail({ emailId, onBack }) {
           </div>
         )}
 
-        {/* Standard file attachments */}
-        {email.attachments?.length > 0 && (
+        {(email.attachments?.length ?? 0) > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-            {email.attachments.map((f, i) => (
+            {email.attachments!.map((f, i) => (
               <div key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: '.8125rem' }}>
                 <IconAttachment className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{f.name}</span>
@@ -239,7 +253,6 @@ export function EmailDetail({ emailId, onBack }) {
           </div>
         )}
 
-        {/* Smart replies — HCI: N7 Flexibility & Efficiency, L4 Hick's Law */}
         {smartReplies.length > 0 && !replyOpen && (
           <div className="smart-replies" style={{ marginBottom: 20 }}>
             {smartReplies.map(r => (
@@ -248,7 +261,6 @@ export function EmailDetail({ emailId, onBack }) {
           </div>
         )}
 
-        {/* Reply / Forward buttons — HCI: N3 User Control, D1 Visibility */}
         {!replyOpen && !forwardOpen && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
             <button className="btn btn-outline" onClick={() => setReplyOpen(true)} style={{ gap: 6 }}>
@@ -262,7 +274,6 @@ export function EmailDetail({ emailId, onBack }) {
           </div>
         )}
 
-        {/* Inline reply composer */}
         {replyOpen && (
           <ReplyComposer
             email={email}

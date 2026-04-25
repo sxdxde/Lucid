@@ -1,20 +1,26 @@
 // HCI: N10 Help & Documentation — tooltips provide context-sensitive help
 // HCI: SP3 Unobtrusiveness — tooltips don't interrupt workflow
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
-export function Tooltip({ children, content, side = 'bottom' }) {
+interface TooltipProps {
+  children: React.ReactNode;
+  content?: React.ReactNode;
+  side?: 'top' | 'bottom' | 'left' | 'right';
+  disabled?: boolean;
+}
+
+export function Tooltip({ children, content, side = 'bottom', disabled }: TooltipProps) {
   const [visible, setVisible] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
-  const triggerRef = useRef(null);
-  const tooltipRef = useRef(null);
+  const triggerRef = useRef<HTMLSpanElement>(null);
 
-  if (!content) return <>{children}</>;
+  if (!content || disabled) return <>{children}</>;
 
   const show = () => {
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     const gap = 6;
-    let x, y;
+    let x = 0, y = 0;
     if (side === 'bottom') {
       x = rect.left + rect.width / 2;
       y = rect.bottom + gap;
@@ -46,7 +52,6 @@ export function Tooltip({ children, content, side = 'bottom' }) {
       </span>
       {visible && (
         <div
-          ref={tooltipRef}
           className="tooltip"
           style={{
             position: 'fixed',

@@ -1,7 +1,6 @@
 // HCI: S3 Informative Feedback — "Saving…" / "Saved" always visible
 // HCI: S5 Permit Reversal — undo send with toast countdown
 // HCI: Raskin Law 1 — never lose data; autosave every 30s
-// HCI: Raskin Law 2 — auto-detect recipients, smart defaults
 // HCI: N5 Error Prevention — warn before send if subject empty
 // HCI: D6 Affordance — compose looks like a distinct modal dialog
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -13,24 +12,32 @@ import {
 import { useUiStore } from '../../stores/uiStore';
 import { useEmailStore } from '../../stores/emailStore';
 import { mockContacts } from '../../data/mockEmails';
+import type { ComposeWindowData, Person } from '../../types';
 
 const AUTOSAVE_INTERVAL = 30000;
 
-function RecipientInput({ label, value, onChange, contacts }) {
-  const [focused, setFocused] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
-  const inputRef = useRef(null);
+interface RecipientInputProps {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  contacts: Person[];
+}
 
-  const handleInput = (val) => {
+function RecipientInput({ label, value, onChange, contacts }: RecipientInputProps) {
+  const [focused, setFocused] = useState(false);
+  const [suggestions, setSuggestions] = useState<Person[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleInput = (val: string) => {
     onChange(val);
-    const last = val.split(',').pop().trim().toLowerCase();
+    const last = val.split(',').pop()?.trim().toLowerCase() ?? '';
     if (last.length < 1) { setSuggestions([]); return; }
     setSuggestions(contacts.filter(c =>
       c.name.toLowerCase().includes(last) || c.email.toLowerCase().includes(last)
     ).slice(0, 5));
   };
 
-  const selectSuggestion = (c) => {
+  const selectSuggestion = (c: Person) => {
     const parts = value.split(',');
     parts[parts.length - 1] = ` ${c.name} <${c.email}>`;
     onChange(parts.join(',') + ', ');
@@ -39,7 +46,7 @@ function RecipientInput({ label, value, onChange, contacts }) {
   };
 
   return (
-    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderBottom: '1px solid var(--border)' }}>
+    <div className="compose-recipient-row">
       <label style={{ fontSize: '.75rem', fontWeight: 600, color: 'var(--text-muted)', flexShrink: 0, width: 24 }}>{label}</label>
       <input
         ref={inputRef}
@@ -48,11 +55,7 @@ function RecipientInput({ label, value, onChange, contacts }) {
         onChange={e => handleInput(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
-        style={{
-          flex: 1, fontSize: '.875rem', color: 'var(--text-primary)',
-          background: 'transparent', border: 'none', outline: 'none',
-          fontFamily: 'var(--font-sans)', padding: '4px 0',
-        }}
+        className="compose-recipient-input"
         placeholder={label === 'To' ? 'Recipients' : ''}
         aria-label={`${label} field`}
       />
@@ -79,17 +82,17 @@ function RecipientInput({ label, value, onChange, contacts }) {
   );
 }
 
-function ToolbarBtn({ icon: Icon, label, onClick }) {
+interface ToolbarBtnProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+}
+
+function ToolbarBtn({ icon: Icon, label, onClick }: ToolbarBtnProps) {
   return (
     <button
       onClick={onClick}
-      style={{
-        width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        borderRadius: 'var(--radius-xs)', border: 'none', background: 'transparent',
-        cursor: 'pointer', color: 'var(--text-secondary)', transition: 'background 120ms',
-      }}
-      onMouseOver={e => e.currentTarget.style.background = 'var(--gray-100)'}
-      onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+      className="compose-toolbar-btn"
       aria-label={label}
       title={label}
     >
@@ -98,7 +101,11 @@ function ToolbarBtn({ icon: Icon, label, onClick }) {
   );
 }
 
-export function ComposeWindow({ windowData }) {
+interface ComposeWindowProps {
+  windowData: ComposeWindowData;
+}
+
+export function ComposeWindow({ windowData }: ComposeWindowProps) {
   const { closeCompose, updateCompose, showToast } = useUiStore();
   const { sendEmail, saveDraft } = useEmailStore();
 
@@ -108,10 +115,10 @@ export function ComposeWindow({ windowData }) {
   const [showCc, setShowCc] = useState(!!cc);
   const [showBcc, setShowBcc] = useState(!!bcc);
   const [sending, setSending] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('saved');
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [subjectWarning, setSubjectWarning] = useState(false);
 
-  const autosaveRef = useRef(null);
+  const autosaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftIdRef = useRef(`draft-${id}`);
 
   const doAutosave = useCallback(() => {
@@ -119,24 +126,25 @@ export function ComposeWindow({ windowData }) {
     saveDraft({
       id: draftIdRef.current,
       from: { name: 'Me', email: 'me@hcimail.app', avatar: 'ME', color: '#3b72ff' },
-      to: to ? [{ name: to, email: to }] : [],
+      to: to ? [{ name: to, email: to, avatar: to.charAt(0), color: '#6366f1' }] : [],
       subject, body: body || '',
       preview: body?.replace(/<[^>]+>/g, '').slice(0, 100) ?? '',
       timestamp: new Date().toISOString(),
       isRead: true, labels: ['drafts'], account: 'primary', attachments: [],
       threadId: draftIdRef.current,
+      isStarred: false,
     });
     setTimeout(() => setSaveStatus('saved'), 500);
   }, [to, subject, body, saveDraft]);
 
   useEffect(() => {
     setSaveStatus('unsaved');
-    clearTimeout(autosaveRef.current);
+    if (autosaveRef.current) clearTimeout(autosaveRef.current);
     autosaveRef.current = setTimeout(doAutosave, AUTOSAVE_INTERVAL);
-    return () => clearTimeout(autosaveRef.current);
+    return () => { if (autosaveRef.current) clearTimeout(autosaveRef.current); };
   }, [to, subject, body, cc, bcc]);
 
-  const update = (field, val) => updateCompose(id, { [field]: val });
+  const update = (field: string, val: string) => updateCompose(id, { [field]: val });
 
   const handleSend = (force = false) => {
     if (!subject.trim() && !force) { setSubjectWarning(true); return; }
@@ -145,7 +153,7 @@ export function ComposeWindow({ windowData }) {
     setTimeout(() => {
       sendEmail({
         from: { name: 'Sudarshan Sudhakar', email: 'sudarshan@hcimail.app', avatar: 'SS', color: '#3b72ff' },
-        to: to ? [{ name: to, email: to }] : [],
+        to: to ? [{ name: to, email: to, avatar: to.charAt(0), color: '#6366f1' }] : [],
         subject, body: body || '',
         preview: (body?.replace(/<[^>]+>/g, '') ?? '').slice(0, 100),
         account: 'primary', attachments: [],
@@ -161,6 +169,12 @@ export function ComposeWindow({ windowData }) {
     closeCompose(id);
   };
 
+  const titleBarBtns = [
+    { icon: IconMinimize, label: minimized ? 'Expand' : 'Minimise', onClick: (e: React.MouseEvent) => { e.stopPropagation(); setMinimized(m => !m); } },
+    { icon: fullscreen ? IconMinimize2 : IconMaximize, label: fullscreen ? 'Exit fullscreen' : 'Fullscreen', onClick: (e: React.MouseEvent) => { e.stopPropagation(); setFullscreen(f => !f); } },
+    { icon: IconClose, label: 'Close', onClick: (e: React.MouseEvent) => { e.stopPropagation(); handleClose(); } },
+  ];
+
   return (
     <div
       className="compose-window"
@@ -173,7 +187,6 @@ export function ComposeWindow({ windowData }) {
       aria-label="Compose email"
       aria-modal="false"
     >
-      {/* Title bar */}
       <div
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -188,19 +201,13 @@ export function ComposeWindow({ windowData }) {
           {subject || 'New message'}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          {/* HCI: S3 Feedback — save status visible */}
           {!minimized && (
             <span style={{ fontSize: '.6875rem', color: saveStatus === 'saved' ? 'var(--gray-400)' : 'var(--gray-300)', display: 'flex', alignItems: 'center', gap: 3, marginRight: 4 }}>
               {saveStatus === 'saved' && <><IconCheck className="w-3 h-3" style={{ color: '#4ade80' }} />Saved</>}
               {saveStatus === 'saving' && 'Saving…'}
-              {saveStatus === 'unsaved' && ''}
             </span>
           )}
-          {[
-            { icon: IconMinimize, label: minimized ? 'Expand' : 'Minimise', onClick: (e) => { e.stopPropagation(); setMinimized(m => !m); } },
-            { icon: fullscreen ? IconMinimize2 : IconMaximize, label: fullscreen ? 'Exit fullscreen' : 'Fullscreen', onClick: (e) => { e.stopPropagation(); setFullscreen(f => !f); } },
-            { icon: IconClose, label: 'Close', onClick: (e) => { e.stopPropagation(); handleClose(); } },
-          ].map(({ icon: Icon, label, onClick }) => (
+          {titleBarBtns.map(({ icon: Icon, label, onClick }) => (
             <button
               key={label}
               onClick={onClick}
@@ -222,48 +229,42 @@ export function ComposeWindow({ windowData }) {
       {!minimized && (
         <>
           {/* Recipients */}
-          <div style={{ background: 'white', position: 'relative' }}>
+          <div className="compose-fields-area" style={{ position: 'relative' }}>
             <RecipientInput label="To" value={to} onChange={v => update('to', v)} contacts={mockContacts} />
             {showCc && <RecipientInput label="Cc" value={cc} onChange={v => update('cc', v)} contacts={mockContacts} />}
             {showBcc && <RecipientInput label="Bcc" value={bcc} onChange={v => update('bcc', v)} contacts={mockContacts} />}
             <div style={{ position: 'absolute', top: 8, right: 12, display: 'flex', gap: 4 }}>
               {!showCc && (
-                <button onClick={() => setShowCc(true)} style={{ fontSize: '.75rem', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px' }}>Cc</button>
+                <button onClick={() => setShowCc(true)} className="compose-cc-btn">Cc</button>
               )}
               {!showBcc && (
-                <button onClick={() => setShowBcc(true)} style={{ fontSize: '.75rem', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px' }}>Bcc</button>
+                <button onClick={() => setShowBcc(true)} className="compose-cc-btn">Bcc</button>
               )}
             </div>
           </div>
 
           {/* Subject */}
-          <div style={{
-            display: 'flex', alignItems: 'center', padding: '0 16px',
-            borderBottom: `1px solid ${subjectWarning ? 'var(--danger)' : 'var(--border)'}`,
-            background: subjectWarning ? '#fff5f4' : 'white',
+          <div className="compose-subject-row" style={{
+            borderBottomColor: subjectWarning ? 'var(--danger)' : 'var(--border)',
+            background: subjectWarning ? 'rgba(234,67,53,.08)' : undefined,
           }}>
             <input
               type="text"
               placeholder="Subject"
               value={subject}
               onChange={e => { update('subject', e.target.value); setSubjectWarning(false); }}
-              style={{
-                flex: 1, fontSize: '.875rem', fontWeight: 500, color: 'var(--text-primary)',
-                background: 'transparent', border: 'none', outline: 'none',
-                padding: '10px 0', fontFamily: 'var(--font-sans)',
-              }}
+              className="compose-subject-input"
               aria-label="Email subject"
             />
           </div>
 
-          {/* Subject warning (HCI: N5 Error Prevention with escape hatch) */}
           {subjectWarning && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#fff5f4', borderBottom: '1px solid #fecaca' }}>
+            <div className="compose-warning-bar">
               <IconAlertCircle className="w-3.5 h-3.5" style={{ color: 'var(--danger)', flexShrink: 0 }} />
-              <span style={{ fontSize: '.8125rem', color: '#b91c1c', flex: 1 }}>Subject is empty.</span>
+              <span style={{ fontSize: '.8125rem', color: 'var(--danger)', flex: 1 }}>Subject is empty.</span>
               <button
                 onClick={() => handleSend(true)}
-                style={{ fontSize: '.8125rem', fontWeight: 600, color: '#b91c1c', background: 'none', border: 'none', cursor: 'pointer' }}
+                style={{ fontSize: '.8125rem', fontWeight: 600, color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer' }}
               >
                 Send anyway
               </button>
@@ -274,20 +275,13 @@ export function ComposeWindow({ windowData }) {
           <textarea
             value={body}
             onChange={e => update('body', e.target.value)}
-            style={{
-              flex: 1, padding: '14px 16px', fontSize: '.875rem', color: 'var(--text-primary)',
-              background: 'white', border: 'none', outline: 'none', resize: 'none',
-              fontFamily: 'var(--font-sans)', lineHeight: 1.65,
-            }}
+            className="compose-body"
             placeholder="Write your message…"
             aria-label="Email body"
           />
 
-          {/* Formatting toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 2, padding: '8px 12px',
-            borderTop: '1px solid var(--border)', background: 'white', flexShrink: 0,
-          }}>
+          {/* Toolbar */}
+          <div className="compose-toolbar">
             <ToolbarBtn icon={IconBold} label="Bold" onClick={() => {}} />
             <ToolbarBtn icon={IconItalic} label="Italic" onClick={() => {}} />
             <ToolbarBtn icon={IconUnderline} label="Underline" onClick={() => {}} />
@@ -298,7 +292,6 @@ export function ComposeWindow({ windowData }) {
             <div style={{ width: 1, height: 16, background: 'var(--border)', margin: '0 4px', flexShrink: 0 }} />
             <ToolbarBtn icon={IconAttachment} label="Attach file" onClick={() => {}} />
 
-            {/* Send */}
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
               <button
                 onClick={() => handleSend()}

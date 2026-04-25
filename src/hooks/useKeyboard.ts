@@ -3,21 +3,22 @@
 import { useEffect, useRef } from 'react';
 import { useUiStore } from '../stores/uiStore';
 import { useEmailStore } from '../stores/emailStore';
+import type { ShortcutDef } from '../types';
 
 export function useKeyboard() {
   const { openCompose, setKeyboardShortcutsVisible, showToast, userPreferences } = useUiStore();
   const { setActiveLabel, undoLastAction, archive, trash, selectedEmailId } = useEmailStore();
   const sequenceRef = useRef('');
-  const sequenceTimerRef = useRef(null);
+  const sequenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!userPreferences.keyboardShortcutsEnabled) return;
 
     const sc = userPreferences.customShortcuts ?? {};
 
-    const handler = (e) => {
-      const tag = e.target.tagName.toLowerCase();
-      const isEditing = tag === 'input' || tag === 'textarea' || e.target.contentEditable === 'true';
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName.toLowerCase();
+      const isEditing = tag === 'input' || tag === 'textarea' || (e.target as HTMLElement).contentEditable === 'true';
 
       if (e.key === 'Escape') {
         useUiStore.getState().setKeyboardShortcutsVisible(false);
@@ -28,7 +29,6 @@ export function useKeyboard() {
 
       const key = e.key;
 
-      // Single-key shortcuts
       if (key.toLowerCase() === sc.compose?.toLowerCase()) { e.preventDefault(); openCompose(); return; }
       if (key === sc.search) { e.preventDefault(); useUiStore.getState().setSearchFocused(true); return; }
       if (key === sc.help) { e.preventDefault(); setKeyboardShortcutsVisible(true); return; }
@@ -50,9 +50,8 @@ export function useKeyboard() {
         return;
       }
 
-      // Two-key sequence shortcuts
       sequenceRef.current += key.toLowerCase();
-      clearTimeout(sequenceTimerRef.current);
+      if (sequenceTimerRef.current) clearTimeout(sequenceTimerRef.current);
       sequenceTimerRef.current = setTimeout(() => { sequenceRef.current = ''; }, 800);
 
       const seq = sequenceRef.current;
@@ -71,18 +70,17 @@ export function useKeyboard() {
   }, [userPreferences.keyboardShortcutsEnabled, userPreferences.customShortcuts, selectedEmailId]);
 }
 
-// Canonical shortcut definitions — used in Settings & overlay
-export const SHORTCUT_DEFS = [
-  { id: 'compose',  category: 'Actions',       description: 'Compose new email',   defaultKey: 'c',  twoKey: false },
-  { id: 'archive',  category: 'Actions',       description: 'Archive selected',     defaultKey: 'e',  twoKey: false },
-  { id: 'delete',   category: 'Actions',       description: 'Delete selected',      defaultKey: '#',  twoKey: false },
-  { id: 'undo',     category: 'Actions',       description: 'Undo last action',     defaultKey: 'z',  twoKey: false },
-  { id: 'reply',    category: 'Actions',       description: 'Reply to email',       defaultKey: 'r',  twoKey: false },
-  { id: 'forward',  category: 'Actions',       description: 'Forward email',        defaultKey: 'f',  twoKey: false },
-  { id: 'goInbox',  category: 'Navigation',    description: 'Go to Inbox',          defaultKey: 'gi', twoKey: true  },
-  { id: 'goSent',   category: 'Navigation',    description: 'Go to Sent',           defaultKey: 'gs', twoKey: true  },
-  { id: 'goTrash',  category: 'Navigation',    description: 'Go to Trash',          defaultKey: 'gt', twoKey: true  },
-  { id: 'goDrafts', category: 'Navigation',    description: 'Go to Drafts',         defaultKey: 'gd', twoKey: true  },
-  { id: 'search',   category: 'Search & Help', description: 'Focus search bar',     defaultKey: '/',  twoKey: false },
-  { id: 'help',     category: 'Search & Help', description: 'Show keyboard shortcuts', defaultKey: '?', twoKey: false },
+export const SHORTCUT_DEFS: ShortcutDef[] = [
+  { id: 'compose',  category: 'Actions',       description: 'Compose new email',      defaultKey: 'c',  twoKey: false },
+  { id: 'archive',  category: 'Actions',       description: 'Archive selected',        defaultKey: 'e',  twoKey: false },
+  { id: 'delete',   category: 'Actions',       description: 'Delete selected',         defaultKey: '#',  twoKey: false },
+  { id: 'undo',     category: 'Actions',       description: 'Undo last action',        defaultKey: 'z',  twoKey: false },
+  { id: 'reply',    category: 'Actions',       description: 'Reply to email',          defaultKey: 'r',  twoKey: false },
+  { id: 'forward',  category: 'Actions',       description: 'Forward email',           defaultKey: 'f',  twoKey: false },
+  { id: 'goInbox',  category: 'Navigation',    description: 'Go to Inbox',             defaultKey: 'gi', twoKey: true  },
+  { id: 'goSent',   category: 'Navigation',    description: 'Go to Sent',              defaultKey: 'gs', twoKey: true  },
+  { id: 'goTrash',  category: 'Navigation',    description: 'Go to Trash',             defaultKey: 'gt', twoKey: true  },
+  { id: 'goDrafts', category: 'Navigation',    description: 'Go to Drafts',            defaultKey: 'gd', twoKey: true  },
+  { id: 'search',   category: 'Search & Help', description: 'Focus search bar',        defaultKey: '/',  twoKey: false },
+  { id: 'help',     category: 'Search & Help', description: 'Show keyboard shortcuts', defaultKey: '?',  twoKey: false },
 ];

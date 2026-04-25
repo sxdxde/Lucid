@@ -1,7 +1,7 @@
 // HCI: Fitts' Law — min 44x44px; Affordance — looks clickable
 import React from 'react';
 
-const variants = {
+const variants: Record<string, string> = {
   primary:   'bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm',
   secondary: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm',
   ghost:     'hover:bg-gray-100 text-gray-600',
@@ -9,7 +9,7 @@ const variants = {
   link:      'text-indigo-600 hover:underline p-0 h-auto min-h-0',
 };
 
-const sizes = {
+const sizes: Record<string, string> = {
   sm: 'h-8 px-3 text-xs gap-1.5',
   md: 'h-10 px-4 text-sm gap-2',
   lg: 'h-11 px-5 text-sm gap-2',
@@ -17,7 +17,13 @@ const sizes = {
   'icon-sm': 'h-7 w-7 p-0',
 };
 
-export function Button({ variant = 'secondary', size = 'md', className = '', children, disabled, loading, ...props }) {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'link';
+  size?: 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm';
+  loading?: boolean;
+}
+
+export function Button({ variant = 'secondary', size = 'md', className = '', children, disabled, loading, ...props }: ButtonProps) {
   return (
     <button
       {...props}

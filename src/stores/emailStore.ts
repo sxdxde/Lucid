@@ -3,10 +3,48 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { mockEmails, mockLabels } from '../data/mockEmails';
+import type { Email, Label, UndoAction } from '../types';
 
 const MAX_UNDO = 10;
 
-export const useEmailStore = create(
+interface EmailStore {
+  emails: Email[];
+  selectedEmailId: string | null;
+  selectedThreadId: string | null;
+  searchQuery: string;
+  activeLabel: string;
+  activeAccount: string | null;
+  undoStack: UndoAction[];
+  customLabels: Label[];
+
+  setSelectedEmail: (id: string | null) => void;
+  setSearchQuery: (q: string) => void;
+  setActiveLabel: (label: string) => void;
+  setActiveAccount: (accountId: string | null) => void;
+
+  markRead: (ids: string[], isRead?: boolean) => void;
+  toggleStar: (id: string) => void;
+  archive: (ids: string[]) => void;
+  trash: (ids: string[]) => void;
+  permanentDelete: (ids: string[]) => void;
+  moveToLabel: (ids: string[], label: string) => void;
+  addLabel: (ids: string[], label: string) => void;
+  removeLabel: (ids: string[], label: string) => void;
+  undoLastAction: () => UndoAction | null;
+
+  sendEmail: (email: Partial<Email>) => void;
+  saveDraft: (draft: Email) => void;
+  deleteDraft: (id: string) => void;
+
+  createLabel: (label: Label) => void;
+  deleteLabel: (id: string) => void;
+  reorderLabels: (newOrder: Label[]) => void;
+
+  getEmailsByLabel: (label: string, accountId?: string | null) => Email[];
+  getUnreadCount: (label: string) => number;
+}
+
+export const useEmailStore = create<EmailStore>()(
   persist(
     (set, get) => ({
       emails: mockEmails,
@@ -14,17 +52,20 @@ export const useEmailStore = create(
       selectedThreadId: null,
       searchQuery: '',
       activeLabel: 'inbox',
-      activeAccount: null, // null = all accounts
+      activeAccount: null,
       undoStack: [],
       customLabels: mockLabels.filter(l => !l.system),
 
-      setSelectedEmail: (id) => set({ selectedEmailId: id, selectedThreadId: id ? get().emails.find(e => e.id === id)?.threadId : null }),
+      setSelectedEmail: (id) => set({
+        selectedEmailId: id,
+        selectedThreadId: id ? get().emails.find(e => e.id === id)?.threadId ?? null : null,
+      }),
       setSearchQuery: (q) => set({ searchQuery: q }),
       setActiveLabel: (label) => set({ activeLabel: label, selectedEmailId: null }),
       setActiveAccount: (accountId) => set({ activeAccount: accountId }),
 
       markRead: (ids, isRead = true) => {
-        const prev = get().emails.map(e => ids.includes(e.id) ? { ...e } : null).filter(Boolean);
+        const prev = get().emails.filter(e => ids.includes(e.id)).map(e => ({ ...e }));
         set(state => ({
           emails: state.emails.map(e => ids.includes(e.id) ? { ...e, isRead } : e),
           undoStack: [
@@ -43,7 +84,9 @@ export const useEmailStore = create(
       archive: (ids) => {
         const prev = get().emails.filter(e => ids.includes(e.id)).map(e => ({ ...e }));
         set(state => ({
-          emails: state.emails.map(e => ids.includes(e.id) ? { ...e, labels: e.labels.filter(l => l !== 'inbox') } : e),
+          emails: state.emails.map(e => ids.includes(e.id)
+            ? { ...e, labels: [...e.labels.filter(l => l !== 'inbox'), 'archived'] }
+            : e),
           selectedEmailId: null,
           undoStack: [
             { type: 'archive', emails: prev },
@@ -118,7 +161,7 @@ export const useEmailStore = create(
           set(state => ({
             emails: state.emails.map(e => {
               const restored = action.emails.find(r => r.id === e.id);
-              return restored ? { ...e, isRead: action.isRead } : e;
+              return restored ? { ...e, isRead: action.isRead ?? e.isRead } : e;
             }),
             undoStack: rest,
           }));
@@ -127,14 +170,20 @@ export const useEmailStore = create(
       },
 
       sendEmail: (email) => {
-        const newEmail = {
-          ...email,
+        const newEmail: Email = {
           id: `sent-${Date.now()}`,
           threadId: `t-sent-${Date.now()}`,
           timestamp: new Date().toISOString(),
           isRead: true,
           isStarred: false,
           labels: ['sent'],
+          from: email.from ?? { name: 'Me', email: 'me@lucidmail.app', avatar: 'ME', color: '#6366f1' },
+          to: email.to ?? [],
+          subject: email.subject ?? '',
+          preview: email.preview ?? '',
+          body: email.body ?? '',
+          account: email.account ?? 'primary',
+          attachments: email.attachments ?? [],
         };
         set(state => ({ emails: [newEmail, ...state.emails] }));
       },
@@ -159,7 +208,6 @@ export const useEmailStore = create(
       deleteLabel: (id) => {
         set(state => ({
           customLabels: state.customLabels.filter(l => l.id !== id),
-          // Remove label from all emails too
           emails: state.emails.map(e => ({ ...e, labels: e.labels.filter(l => l !== id) })),
         }));
       },
@@ -176,8 +224,15 @@ export const useEmailStore = create(
               ? !e.labels.includes('trash') && !e.labels.includes('spam')
               : label === 'inbox'
               ? e.labels.includes('inbox') && !e.labels.includes('trash')
+              : label === 'starred'
+              ? e.labels.includes('starred') || e.isStarred
+              : label === 'archived'
+              ? e.labels.includes('archived') && !e.labels.includes('trash')
               : e.labels.includes(label);
-          const inAccount = !accountId || e.account === accountId;
+          // allmail shows all accounts; inbox filters by account
+          const inAccount = label === 'allmail'
+            ? true
+            : !accountId || e.account === accountId;
           return inLabel && inAccount;
         });
       },

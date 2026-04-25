@@ -2,13 +2,60 @@
 // HCI: N1 Visibility of System Status — toast queue and chat state always reflect reality
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { ComposeWindowData, Toast, ConfirmDialogConfig, UserPreferences } from '../types';
+import type { Person } from '../types';
 
 let toastId = 0;
 
-export const useUiStore = create(
+interface ShowToastOptions {
+  message: string;
+  type?: 'info' | 'success' | 'error';
+  duration?: number;
+  undoAction?: string | null;
+  retryAction?: (() => void) | null;
+}
+
+interface UiStore {
+  sidebarExpanded: boolean;
+  composeOpen: boolean;
+  composeWindows: ComposeWindowData[];
+  activeView: string;
+  toastQueue: Toast[];
+  keyboardShortcutsVisible: boolean;
+  confirmDialog: ConfirmDialogConfig | null;
+  searchFocused: boolean;
+  chatOpen: boolean;
+  chatContact: Person | null;
+  userPreferences: UserPreferences;
+
+  toggleSidebar: () => void;
+  openCompose: (prefill?: Partial<ComposeWindowData>) => string;
+  closeCompose: (id: string) => void;
+  updateCompose: (id: string, fields: Partial<ComposeWindowData>) => void;
+  openChat: (contact: Person) => void;
+  closeChat: () => void;
+  setActiveView: (view: string) => void;
+  setSearchFocused: (val: boolean) => void;
+  setKeyboardShortcutsVisible: (val: boolean) => void;
+  showToast: (opts: ShowToastOptions) => number;
+  dismissToast: (id: number) => void;
+  showConfirmDialog: (config: ConfirmDialogConfig) => void;
+  hideConfirmDialog: () => void;
+  setPreference: (key: keyof UserPreferences, value: UserPreferences[keyof UserPreferences]) => void;
+  setCustomShortcut: (actionId: string, key: string) => void;
+  resetShortcuts: () => void;
+}
+
+const DEFAULT_SHORTCUTS: Record<string, string> = {
+  compose: 'c', search: '/', help: '?', undo: 'z',
+  delete: '#', goInbox: 'gi', goSent: 'gs',
+  goTrash: 'gt', goDrafts: 'gd', reply: 'r', forward: 'f',
+};
+
+export const useUiStore = create<UiStore>()(
   persist(
     (set, get) => ({
-      sidebarExpanded: false,   // compact (68px) vs expanded (220px)
+      sidebarExpanded: false,
       composeOpen: false,
       composeWindows: [],
       activeView: 'list',
@@ -22,27 +69,13 @@ export const useUiStore = create(
       userPreferences: {
         density: 'comfortable',
         theme: 'light',
-        zoom: 'default',          // 'small' | 'default' | 'large'
+        zoom: 'default',
         keyboardShortcutsEnabled: true,
-        customShortcuts: {
-          compose: 'c',
-          search: '/',
-          help: '?',
-          undo: 'z',
-          delete: '#',
-          goInbox: 'gi',
-          goSent: 'gs',
-          goTrash: 'gt',
-          goDrafts: 'gd',
-          reply: 'r',
-          forward: 'f',
-        },
+        customShortcuts: { ...DEFAULT_SHORTCUTS },
       },
 
-      // ── Sidebar ──────────────────────────────────────────
       toggleSidebar: () => set(s => ({ sidebarExpanded: !s.sidebarExpanded })),
 
-      // ── Compose ──────────────────────────────────────────
       openCompose: (prefill = {}) => {
         const id = `compose-${Date.now()}`;
         set(state => ({
@@ -51,28 +84,27 @@ export const useUiStore = create(
         }));
         return id;
       },
+
       closeCompose: (id) => {
         set(state => {
           const windows = state.composeWindows.filter(w => w.id !== id);
           return { composeWindows: windows, composeOpen: windows.length > 0 };
         });
       },
+
       updateCompose: (id, fields) => {
         set(state => ({
           composeWindows: state.composeWindows.map(w => w.id === id ? { ...w, ...fields } : w),
         }));
       },
 
-      // ── Chat ─────────────────────────────────────────────
       openChat: (contact) => set({ chatOpen: true, chatContact: contact }),
       closeChat: () => set({ chatOpen: false, chatContact: null }),
 
-      // ── UI state ─────────────────────────────────────────
       setActiveView: (view) => set({ activeView: view }),
       setSearchFocused: (val) => set({ searchFocused: val }),
       setKeyboardShortcutsVisible: (val) => set({ keyboardShortcutsVisible: val }),
 
-      // ── Toasts ───────────────────────────────────────────
       showToast: ({ message, type = 'info', duration = 4000, undoAction = null, retryAction = null }) => {
         const id = ++toastId;
         set(state => {
@@ -82,21 +114,20 @@ export const useUiStore = create(
         if (duration > 0) setTimeout(() => get().dismissToast(id), duration);
         return id;
       },
+
       dismissToast: (id) => {
         set(state => ({ toastQueue: state.toastQueue.filter(t => t.id !== id) }));
       },
 
-      // ── Confirm dialog ───────────────────────────────────
       showConfirmDialog: (config) => set({ confirmDialog: config }),
       hideConfirmDialog: () => set({ confirmDialog: null }),
 
-      // ── Preferences ──────────────────────────────────────
       setPreference: (key, value) => {
         set(state => ({
           userPreferences: { ...state.userPreferences, [key]: value },
         }));
-        if (key === 'theme') applyTheme(value);
-        if (key === 'zoom') applyZoom(value);
+        if (key === 'theme') applyTheme(value as string);
+        if (key === 'zoom') applyZoom(value as string);
       },
 
       setCustomShortcut: (actionId, key) => {
@@ -112,11 +143,7 @@ export const useUiStore = create(
         set(state => ({
           userPreferences: {
             ...state.userPreferences,
-            customShortcuts: {
-              compose: 'c', search: '/', help: '?', undo: 'z',
-              delete: '#', goInbox: 'gi', goSent: 'gs',
-              goTrash: 'gt', goDrafts: 'gd', reply: 'r', forward: 'f',
-            },
+            customShortcuts: { ...DEFAULT_SHORTCUTS },
           },
         }));
       },
@@ -137,13 +164,13 @@ export const useUiStore = create(
   )
 );
 
-function applyTheme(value) {
+function applyTheme(value: string) {
   const root = document.documentElement;
   if (value === 'dark') root.classList.add('dark');
   else root.classList.remove('dark');
 }
 
-function applyZoom(value) {
-  const sizes = { small: '12px', default: '14px', large: '16px' };
+function applyZoom(value: string) {
+  const sizes: Record<string, string> = { small: '12px', default: '14px', large: '16px' };
   document.documentElement.style.fontSize = sizes[value] ?? '14px';
 }

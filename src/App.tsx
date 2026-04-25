@@ -18,34 +18,36 @@ import { useEmailStore } from './stores/emailStore';
 import { useKeyboard }   from './hooks/useKeyboard';
 import './App.css';
 
+type AppView = 'inbox' | 'detail' | 'settings' | 'settings-tags';
+
 export default function App() {
   useKeyboard();
 
   const { composeWindows, userPreferences } = useUiStore();
   const { selectedEmailId, setSelectedEmail, markRead } = useEmailStore();
 
-  const [view, setView]                     = useState('inbox');
-  const [previewEmailId, setPreviewEmailId] = useState(null);
+  const [view, setView]                     = useState<AppView>('inbox');
+  const [previewEmailId, setPreviewEmailId] = useState<string | null>(null);
+  const [settingsTab, setSettingsTab]       = useState<string>('appearance');
 
-  // Apply zoom and theme on mount (persisted preferences need re-application)
   useEffect(() => {
-    const sizes = { small: '12px', default: '14px', large: '16px' };
+    const sizes: Record<string, string> = { small: '12px', default: '14px', large: '16px' };
     document.documentElement.style.fontSize = sizes[userPreferences.zoom ?? 'default'] ?? '14px';
     if (userPreferences.theme === 'dark') document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   }, []);
 
-  const handleNavigate = (path) => {
-    if (path === '/settings') setView('settings');
+  const handleNavigate = (path: string) => {
+    if (path === '/settings') { setSettingsTab('appearance'); setView('settings'); }
   };
 
-  const handleEmailSelect = (id) => {
+  const handleEmailSelect = (id: string) => {
     if (previewEmailId === id) return;
     setPreviewEmailId(id);
     markRead([id], true);
   };
 
-  const handleViewDetail = (id) => {
+  const handleViewDetail = (id: string) => {
     setSelectedEmail(id);
     setPreviewEmailId(null);
     setView('detail');
@@ -57,10 +59,15 @@ export default function App() {
     setView('inbox');
   };
 
-  const handleLabelSelect = () => {
+  const handleLabelSelect = (id?: string) => {
     setPreviewEmailId(null);
     setSelectedEmail(null);
-    setView('inbox');
+    if (id === '__create_label__') {
+      setSettingsTab('tags');
+      setView('settings');
+    } else {
+      setView('inbox');
+    }
   };
 
   const hasCompose = composeWindows.length > 0;
@@ -72,7 +79,7 @@ export default function App() {
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           <Sidebar onLabelSelect={handleLabelSelect} />
           <main style={{ flex: 1, overflow: 'hidden' }} role="main">
-            <Settings onBack={() => setView('inbox')} />
+            <Settings onBack={() => setView('inbox')} initialTab={settingsTab} />
           </main>
         </div>
         <ToastContainer />
@@ -106,7 +113,6 @@ export default function App() {
         </main>
       </div>
 
-      {/* Compose backdrop blur */}
       {hasCompose && (
         <div
           style={{
@@ -119,7 +125,6 @@ export default function App() {
         />
       )}
 
-      {/* Floating compose windows */}
       {composeWindows.map((w, i) => (
         <div
           key={w.id}
@@ -129,7 +134,6 @@ export default function App() {
         </div>
       ))}
 
-      {/* Chat panel */}
       <Chat />
 
       <ToastContainer />
