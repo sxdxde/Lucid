@@ -1,0 +1,197 @@
+// HCI: S5 Permit Easy Reversal — undo stack for all destructive actions
+// HCI: S3 Informative Feedback — state changes trigger UI updates
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { mockEmails, mockLabels } from '../data/mockEmails';
+
+const MAX_UNDO = 10;
+
+export const useEmailStore = create(
+  persist(
+    (set, get) => ({
+      emails: mockEmails,
+      selectedEmailId: null,
+      selectedThreadId: null,
+      searchQuery: '',
+      activeLabel: 'inbox',
+      activeAccount: null, // null = all accounts
+      undoStack: [],
+      customLabels: mockLabels.filter(l => !l.system),
+
+      setSelectedEmail: (id) => set({ selectedEmailId: id, selectedThreadId: id ? get().emails.find(e => e.id === id)?.threadId : null }),
+      setSearchQuery: (q) => set({ searchQuery: q }),
+      setActiveLabel: (label) => set({ activeLabel: label, selectedEmailId: null }),
+      setActiveAccount: (accountId) => set({ activeAccount: accountId }),
+
+      markRead: (ids, isRead = true) => {
+        const prev = get().emails.map(e => ids.includes(e.id) ? { ...e } : null).filter(Boolean);
+        set(state => ({
+          emails: state.emails.map(e => ids.includes(e.id) ? { ...e, isRead } : e),
+          undoStack: [
+            { type: 'markRead', emails: prev, isRead: !isRead },
+            ...state.undoStack.slice(0, MAX_UNDO - 1),
+          ],
+        }));
+      },
+
+      toggleStar: (id) => {
+        set(state => ({
+          emails: state.emails.map(e => e.id === id ? { ...e, isStarred: !e.isStarred } : e),
+        }));
+      },
+
+      archive: (ids) => {
+        const prev = get().emails.filter(e => ids.includes(e.id)).map(e => ({ ...e }));
+        set(state => ({
+          emails: state.emails.map(e => ids.includes(e.id) ? { ...e, labels: e.labels.filter(l => l !== 'inbox') } : e),
+          selectedEmailId: null,
+          undoStack: [
+            { type: 'archive', emails: prev },
+            ...state.undoStack.slice(0, MAX_UNDO - 1),
+          ],
+        }));
+      },
+
+      trash: (ids) => {
+        const prev = get().emails.filter(e => ids.includes(e.id)).map(e => ({ ...e }));
+        set(state => ({
+          emails: state.emails.map(e => ids.includes(e.id)
+            ? { ...e, labels: [...e.labels.filter(l => l !== 'inbox'), 'trash'] }
+            : e),
+          selectedEmailId: null,
+          undoStack: [
+            { type: 'trash', emails: prev },
+            ...state.undoStack.slice(0, MAX_UNDO - 1),
+          ],
+        }));
+      },
+
+      permanentDelete: (ids) => {
+        set(state => ({
+          emails: state.emails.filter(e => !ids.includes(e.id)),
+          selectedEmailId: null,
+        }));
+      },
+
+      moveToLabel: (ids, label) => {
+        const prev = get().emails.filter(e => ids.includes(e.id)).map(e => ({ ...e }));
+        set(state => ({
+          emails: state.emails.map(e => ids.includes(e.id)
+            ? { ...e, labels: [...new Set([...e.labels.filter(l => l !== 'inbox' && l !== 'trash'), label])] }
+            : e),
+          undoStack: [
+            { type: 'move', emails: prev, label },
+            ...state.undoStack.slice(0, MAX_UNDO - 1),
+          ],
+        }));
+      },
+
+      addLabel: (ids, label) => {
+        set(state => ({
+          emails: state.emails.map(e => ids.includes(e.id)
+            ? { ...e, labels: [...new Set([...e.labels, label])] }
+            : e),
+        }));
+      },
+
+      removeLabel: (ids, label) => {
+        set(state => ({
+          emails: state.emails.map(e => ids.includes(e.id)
+            ? { ...e, labels: e.labels.filter(l => l !== label) }
+            : e),
+        }));
+      },
+
+      undoLastAction: () => {
+        const { undoStack } = get();
+        if (undoStack.length === 0) return null;
+        const [action, ...rest] = undoStack;
+        if (action.type === 'archive' || action.type === 'trash' || action.type === 'move') {
+          set(state => ({
+            emails: state.emails.map(e => {
+              const restored = action.emails.find(r => r.id === e.id);
+              return restored || e;
+            }),
+            undoStack: rest,
+          }));
+        } else if (action.type === 'markRead') {
+          set(state => ({
+            emails: state.emails.map(e => {
+              const restored = action.emails.find(r => r.id === e.id);
+              return restored ? { ...e, isRead: action.isRead } : e;
+            }),
+            undoStack: rest,
+          }));
+        }
+        return action;
+      },
+
+      sendEmail: (email) => {
+        const newEmail = {
+          ...email,
+          id: `sent-${Date.now()}`,
+          threadId: `t-sent-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          isRead: true,
+          isStarred: false,
+          labels: ['sent'],
+        };
+        set(state => ({ emails: [newEmail, ...state.emails] }));
+      },
+
+      saveDraft: (draft) => {
+        const existing = get().emails.find(e => e.id === draft.id);
+        if (existing) {
+          set(state => ({ emails: state.emails.map(e => e.id === draft.id ? { ...e, ...draft } : e) }));
+        } else {
+          set(state => ({ emails: [{ ...draft, labels: ['drafts'], isRead: true }, ...state.emails] }));
+        }
+      },
+
+      deleteDraft: (id) => {
+        set(state => ({ emails: state.emails.filter(e => e.id !== id) }));
+      },
+
+      createLabel: (label) => {
+        set(state => ({ customLabels: [...state.customLabels, label] }));
+      },
+
+      deleteLabel: (id) => {
+        set(state => ({
+          customLabels: state.customLabels.filter(l => l.id !== id),
+          // Remove label from all emails too
+          emails: state.emails.map(e => ({ ...e, labels: e.labels.filter(l => l !== id) })),
+        }));
+      },
+
+      reorderLabels: (newOrder) => {
+        set({ customLabels: newOrder });
+      },
+
+      getEmailsByLabel: (label, accountId = null) => {
+        const { emails } = get();
+        return emails.filter(e => {
+          const inLabel =
+            label === 'allmail'
+              ? !e.labels.includes('trash') && !e.labels.includes('spam')
+              : label === 'inbox'
+              ? e.labels.includes('inbox') && !e.labels.includes('trash')
+              : e.labels.includes(label);
+          const inAccount = !accountId || e.account === accountId;
+          return inLabel && inAccount;
+        });
+      },
+
+      getUnreadCount: (label) => {
+        return get().emails.filter(e => e.labels.includes(label) && !e.isRead).length;
+      },
+    }),
+    {
+      name: 'clearmail-emails',
+      partialize: (state) => ({
+        emails: state.emails.filter(e => e.labels.includes('drafts')),
+        customLabels: state.customLabels,
+      }),
+    }
+  )
+);

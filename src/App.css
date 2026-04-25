@@ -1,0 +1,18 @@
+/* App-level styles: overrides and composition */
+
+/* Spin animation for compose spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Remove browser default font from button/input (already set in index.css but some resets miss it) */
+button, input, textarea, select {
+  font-family: inherit;
+}
+
+/* Prose reset for email body HTML */
+.email-body * {
+  max-width: 100%;
+}
+.email-body table {
+  border-collapse: collapse;
+  width: 100%;
+}
