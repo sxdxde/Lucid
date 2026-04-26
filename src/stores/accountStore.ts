@@ -11,6 +11,7 @@ interface AccountStore {
 
   switchAccount: (id: string) => void;
   signOutAccount: (id: string) => void;
+  addAccount: (name: string, email: string) => void;
   getActiveAccount: () => Account;
 }
 
@@ -33,6 +34,15 @@ export const useAccountStore = create<AccountStore>()(
             : state.activeAccountId;
           return { accounts: remaining, activeAccountId: newActive };
         });
+      },
+
+      addAccount: (name, email) => {
+        const COLORS = ['#6366f1','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#be185d'];
+        const id = `acc-${Date.now()}`;
+        const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || email[0].toUpperCase();
+        const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        const account: import('../types').Account = { id, name, email, avatar: initials, color };
+        set(state => ({ accounts: [...state.accounts, account], activeAccountId: id }));
       },
 
       getActiveAccount: () => {

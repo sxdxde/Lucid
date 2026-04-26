@@ -45,12 +45,15 @@ interface TopBarProps {
 export function TopBar({ onNavigate }: TopBarProps) {
   const { searchQuery, setSearchQuery, setActiveLabel } = useEmailStore();
   const { setSearchFocused, searchFocused, setKeyboardShortcutsVisible } = useUiStore();
-  const { accounts, activeAccountId, switchAccount, signOutAccount, getActiveAccount } = useAccountStore();
+  const { accounts, activeAccountId, switchAccount, signOutAccount, addAccount, getActiveAccount } = useAccountStore();
   const activeAccount = getActiveAccount();
 
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const [focused, setFocused] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [addingAccount, setAddingAccount] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) ?? '[]') ?? []; } catch { return []; }
   });
@@ -219,12 +222,6 @@ export function TopBar({ onNavigate }: TopBarProps) {
           </button>
         </Tooltip>
 
-        <Tooltip content="Google apps" side="bottom">
-          <button className="icon-btn" aria-label="Google apps">
-            <IconGrid className="w-4 h-4" />
-          </button>
-        </Tooltip>
-
         <div style={{ position: 'relative', marginLeft: 4 }} ref={accountRef}>
           <button
             onClick={() => setAccountOpen(o => !o)}
@@ -284,10 +281,60 @@ export function TopBar({ onNavigate }: TopBarProps) {
                     <div className="divider" style={{ margin: '8px 0' }} />
                   </>
                 )}
-                <button className="dropdown-item" style={{ color: 'var(--brand-600)' }}>
-                  <IconPlus className="w-4 h-4" />
-                  Add another account
-                </button>
+                {!addingAccount ? (
+                  <button
+                    className="dropdown-item"
+                    style={{ color: 'var(--brand-600)' }}
+                    onClick={() => setAddingAccount(true)}
+                  >
+                    <IconPlus className="w-4 h-4" />
+                    Add another account
+                  </button>
+                ) : (
+                  <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <p style={{ margin: '0 0 4px', fontSize: '.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>New account</p>
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Full name"
+                      value={newName}
+                      onChange={e => setNewName(e.target.value)}
+                      style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', fontSize: '.875rem', fontFamily: 'var(--font-sans)', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                      onFocus={e => (e.target.style.borderColor = 'var(--brand-500)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email address"
+                      value={newEmail}
+                      onChange={e => setNewEmail(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && newName.trim() && newEmail.includes('@')) {
+                          addAccount(newName.trim(), newEmail.trim());
+                          setNewName(''); setNewEmail(''); setAddingAccount(false); setAccountOpen(false);
+                        }
+                      }}
+                      style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', fontSize: '.875rem', fontFamily: 'var(--font-sans)', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                      onFocus={e => (e.target.style.borderColor = 'var(--brand-500)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                    />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => { setAddingAccount(false); setNewName(''); setNewEmail(''); }}
+                        style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: '.8125rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+                      >Cancel</button>
+                      <button
+                        onClick={() => {
+                          if (newName.trim() && newEmail.includes('@')) {
+                            addAccount(newName.trim(), newEmail.trim());
+                            setNewName(''); setNewEmail(''); setAddingAccount(false); setAccountOpen(false);
+                          }
+                        }}
+                        style={{ flex: 1, padding: '7px', borderRadius: 8, border: 'none', background: 'var(--brand-500)', color: 'white', fontSize: '.8125rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+                      >Add</button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

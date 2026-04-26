@@ -1,8 +1,5 @@
-// HCI: Jakob's Law — familiar layout; compact sidebar, top bar, content pane
-// HCI: G8 Continuity — consistent chrome on every screen
-// HCI: S5 Reversal — undo available globally via keyboard + toast
-// HCI: D6 Affordance — compose blurs background to signal modal focus
 import React, { useState, useEffect } from 'react';
+import { LandingPage }  from './pages/LandingPage';
 import { TopBar }        from './components/layout/TopBar';
 import { Sidebar }       from './components/layout/Sidebar';
 import { EmailList }     from './components/email/EmailList';
@@ -18,17 +15,17 @@ import { useEmailStore } from './stores/emailStore';
 import { useKeyboard }   from './hooks/useKeyboard';
 import './App.css';
 
-type AppView = 'inbox' | 'detail' | 'settings' | 'settings-tags';
+type AppView = 'landing' | 'inbox' | 'detail' | 'settings';
 
-export default function App() {
+function MainApp() {
   useKeyboard();
 
   const { composeWindows, userPreferences } = useUiStore();
   const { selectedEmailId, setSelectedEmail, markRead } = useEmailStore();
 
-  const [view, setView]                     = useState<AppView>('inbox');
+  const [view, setView]               = useState<Exclude<AppView, 'landing'>>('inbox');
   const [previewEmailId, setPreviewEmailId] = useState<string | null>(null);
-  const [settingsTab, setSettingsTab]       = useState<string>('appearance');
+  const [settingsTab, setSettingsTab] = useState<string>('appearance');
 
   useEffect(() => {
     const sizes: Record<string, string> = { small: '12px', default: '14px', large: '16px' };
@@ -62,12 +59,8 @@ export default function App() {
   const handleLabelSelect = (id?: string) => {
     setPreviewEmailId(null);
     setSelectedEmail(null);
-    if (id === '__create_label__') {
-      setSettingsTab('tags');
-      setView('settings');
-    } else {
-      setView('inbox');
-    }
+    if (id === '__create_label__') { setSettingsTab('tags'); setView('settings'); }
+    else setView('inbox');
   };
 
   const hasCompose = composeWindows.length > 0;
@@ -95,7 +88,6 @@ export default function App() {
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <Sidebar onLabelSelect={handleLabelSelect} />
-
         <main
           style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 0 }}
           role="main"
@@ -115,30 +107,37 @@ export default function App() {
 
       {hasCompose && (
         <div
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(32, 33, 36, 0.28)',
-            backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)',
-            zIndex: 48,
-          }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(32,33,36,.28)', backdropFilter: 'blur(3px)', zIndex: 48 }}
           aria-hidden="true"
         />
       )}
 
       {composeWindows.map((w, i) => (
-        <div
-          key={w.id}
-          style={{ position: 'fixed', right: 16 + i * (548 + 8), bottom: 0, zIndex: 50, display: 'flex', flexDirection: 'column' }}
-        >
+        <div key={w.id} style={{ position: 'fixed', right: 16 + i * 556, bottom: 0, zIndex: 50 }}>
           <ComposeWindow windowData={w} />
         </div>
       ))}
 
       <Chat />
-
       <ToastContainer />
       <ConfirmDialog />
       <KeyboardShortcutsOverlay />
     </div>
   );
+}
+
+export default function App() {
+  const [appView, setAppView] = useState<AppView>('landing');
+  const [userName, setUserName] = useState('Sudarshan');
+
+  const handleLogin = (name: string) => {
+    setUserName(name);
+    setAppView('inbox');
+  };
+
+  if (appView === 'landing') {
+    return <LandingPage onLogin={handleLogin} />;
+  }
+
+  return <MainApp />;
 }

@@ -112,9 +112,11 @@ export function IconCompose({ className = 'w-4 h-4', style }: IconProps) {
 
 export function IconSettings({ className = 'w-4 h-4', style }: IconProps) {
   return (
-    <svg className={className} style={style} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="10" cy="10" r="2.5" />
-      <path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18M4.22 4.22l1.06 1.06M14.72 14.72l1.06 1.06M4.22 15.78l1.06-1.06M14.72 5.28l1.06-1.06" />
+    <svg className={className} style={style} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      {/* Sliders / controls icon — clearly not a sun */}
+      <path d="M3 5.5h3.5" /><circle cx="8" cy="5.5" r="2" /><path d="M10 5.5h7" />
+      <path d="M3 10h7.5" /><circle cx="12.5" cy="10" r="2" /><path d="M14.5 10h2.5" />
+      <path d="M3 14.5h2.5" /><circle cx="7" cy="14.5" r="2" /><path d="M9 14.5h8" />
     </svg>
   );
 }
