@@ -6,7 +6,7 @@
 // HCI: N9 Error Prevention — spam rows visually flagged before user opens
 // HCI: W4 Feature Exposure — inline preview panel shows body + images on click
 import React, { useState } from 'react';
-import { IconStar, IconTrash, IconMail, IconMailOpen, IconAttachment, IconAlertTriangle, IconArchive, IconCheck, IconBell, IconPlus } from '../ui/Icons';
+import { IconStar, IconTrash, IconMail, IconMailOpen, IconAttachment, IconAlertTriangle, IconArchive, IconCheck, IconBell, IconInbox } from '../ui/Icons';
 import { Avatar } from '../ui/Avatar';
 import { Tooltip } from '../ui/Tooltip';
 import { useEmailStore } from '../../stores/emailStore';
@@ -41,9 +41,13 @@ interface PreviewPanelProps {
 
 function PreviewPanel({ email, onViewDetail }: PreviewPanelProps) {
   const { openCompose, showToast } = useUiStore();
-  const { toggleStar, archive, trash } = useEmailStore();
+  const { toggleStar, archive, trash, restoreToInbox, permanentDelete, activeLabel } = useEmailStore();
   const smartReplies = email.smartReplies ?? [];
   const images = email.images ?? [];
+
+  const inTrash    = activeLabel === 'trash';
+  const inArchive  = activeLabel === 'archived';
+  const inInbox    = !inTrash && !inArchive;
 
   const handleSmartReply = (reply: string) => {
     openCompose({
@@ -53,7 +57,9 @@ function PreviewPanel({ email, onViewDetail }: PreviewPanelProps) {
     });
   };
 
+  // Build context-sensitive action list
   const previewActions = [
+    // Star always available
     {
       icon: IconStar,
       label: email.isStarred ? 'Unstar' : 'Star',
@@ -63,27 +69,61 @@ function PreviewPanel({ email, onViewDetail }: PreviewPanelProps) {
       },
       active: email.isStarred, color: '#f59e0b',
     },
-    {
-      icon: IconTrash, label: 'Delete',
-      onClick: () => { trash([email.id]); showToast({ message: 'Moved to Trash', type: 'info', undoAction: 'trash' }); },
-      danger: true,
-    },
-    {
-      icon: IconAlertTriangle, label: 'Report spam',
-      onClick: () => { showToast({ message: 'Marked as spam', type: 'info', undoAction: 'spam' }); },
-    },
-    {
-      icon: IconArchive, label: 'Archive',
-      onClick: () => { archive([email.id]); showToast({ message: 'Archived', type: 'info', undoAction: 'archive' }); },
-    },
-    {
-      icon: IconCheck, label: 'Mark done',
-      onClick: () => { showToast({ message: 'Marked as done', type: 'success', duration: 2500 }); },
-    },
-    {
-      icon: IconBell, label: 'Snooze',
-      onClick: () => { showToast({ message: 'Snoozed until tomorrow', type: 'info', duration: 2500 }); },
-    },
+
+    // TRASH view: Restore to Inbox + Archive + Delete Forever
+    ...(inTrash ? [
+      {
+        icon: IconInbox, label: 'Restore to Inbox',
+        onClick: () => { restoreToInbox([email.id]); showToast({ message: 'Restored to Inbox', type: 'success', undoAction: 'move' }); },
+      },
+      {
+        icon: IconArchive, label: 'Move to Archive',
+        onClick: () => { archive([email.id]); showToast({ message: 'Moved to Archive', type: 'info', undoAction: 'archive' }); },
+      },
+      {
+        icon: IconTrash, label: 'Delete forever',
+        onClick: () => { permanentDelete([email.id]); showToast({ message: 'Permanently deleted', type: 'info' }); },
+        danger: true,
+      },
+    ] : []),
+
+    // ARCHIVE view: Move to Inbox + Move to Trash
+    ...(inArchive ? [
+      {
+        icon: IconInbox, label: 'Move to Inbox',
+        onClick: () => { restoreToInbox([email.id]); showToast({ message: 'Moved to Inbox', type: 'success', undoAction: 'move' }); },
+      },
+      {
+        icon: IconTrash, label: 'Move to Trash',
+        onClick: () => { trash([email.id]); showToast({ message: 'Moved to Trash', type: 'info', undoAction: 'trash' }); },
+        danger: true,
+      },
+    ] : []),
+
+    // INBOX / other views: Archive + Trash + Spam
+    ...(inInbox ? [
+      {
+        icon: IconArchive, label: 'Archive',
+        onClick: () => { archive([email.id]); showToast({ message: 'Archived', type: 'info', undoAction: 'archive' }); },
+      },
+      {
+        icon: IconTrash, label: 'Delete',
+        onClick: () => { trash([email.id]); showToast({ message: 'Moved to Trash', type: 'info', undoAction: 'trash' }); },
+        danger: true,
+      },
+      {
+        icon: IconAlertTriangle, label: 'Report spam',
+        onClick: () => { showToast({ message: 'Marked as spam', type: 'info', undoAction: 'spam' }); },
+      },
+      {
+        icon: IconCheck, label: 'Mark done',
+        onClick: () => { showToast({ message: 'Marked as done', type: 'success', duration: 2500 }); },
+      },
+      {
+        icon: IconBell, label: 'Snooze',
+        onClick: () => { showToast({ message: 'Snoozed until tomorrow', type: 'info', duration: 2500 }); },
+      },
+    ] : []),
   ];
 
   return (

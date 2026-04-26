@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import {
   IconArrowLeft, IconTrash, IconStar, IconReply, IconForward,
   IconAttachment, IconBell, IconClose, IconNoEmail, IconAlertTriangle,
-  IconPlus, IconCheck,
+  IconPlus, IconCheck, IconArchive, IconInbox,
 } from '../ui/Icons';
 import { useEmailStore } from '../../stores/emailStore';
 import { useUiStore } from '../../stores/uiStore';
@@ -34,18 +34,44 @@ interface ActionDef {
 
 interface ActionSidebarProps {
   email: Email;
+  inTrash: boolean;
+  inArchive: boolean;
   onTrash: () => void;
+  onArchive: () => void;
+  onRestore: () => void;
+  onDeleteForever: () => void;
   onToggleStar: () => void;
 }
 
-function ActionSidebar({ email, onTrash, onToggleStar }: ActionSidebarProps) {
+function ActionSidebar({ email, inTrash, inArchive, onTrash, onArchive, onRestore, onDeleteForever, onToggleStar }: ActionSidebarProps) {
+  // Build context-aware action list
   const actions: ActionDef[] = [
-    { icon: IconStar,          label: email.isStarred ? 'Unstar' : 'Star', onClick: onToggleStar, active: email.isStarred, activeColor: '#f59e0b' },
-    { icon: IconTrash,         label: 'Delete — moves to Trash (30 days to recover)', onClick: onTrash, active: false, activeColor: '#ef4444', danger: true },
-    { icon: IconAlertTriangle, label: 'Report spam',  onClick: () => {}, active: false },
-    { icon: IconPlus,          label: 'Add label',    onClick: () => {}, active: false },
-    { icon: IconCheck,         label: 'Mark done',    onClick: () => {}, active: false },
-    { icon: IconBell,          label: 'Snooze',       onClick: () => {}, active: false },
+    { icon: IconStar, label: email.isStarred ? 'Unstar' : 'Star', onClick: onToggleStar, active: email.isStarred, activeColor: '#f59e0b' },
+
+    // TRASH: Restore, Move to Archive, Delete Forever
+    ...(inTrash ? [
+      { icon: IconInbox,  label: 'Restore to Inbox',               onClick: onRestore,       active: false },
+      { icon: IconArchive,label: 'Move to Archive',                 onClick: onArchive,       active: false },
+      { icon: IconTrash,  label: 'Delete forever (cannot be undone)', onClick: onDeleteForever, active: false, danger: true },
+    ] as ActionDef[] : []),
+
+    // ARCHIVE: Move to Inbox, Move to Trash
+    ...(inArchive ? [
+      { icon: IconInbox,  label: 'Move to Inbox',  onClick: onRestore, active: false },
+      { icon: IconTrash,  label: 'Move to Trash',  onClick: onTrash,   active: false, danger: true },
+      { icon: IconCheck,  label: 'Mark done',       onClick: () => {}, active: false },
+      { icon: IconBell,   label: 'Snooze',          onClick: () => {}, active: false },
+    ] as ActionDef[] : []),
+
+    // INBOX / other: Archive, Trash, Spam, Done, Snooze
+    ...(!inTrash && !inArchive ? [
+      { icon: IconArchive,       label: 'Archive (removes from inbox)', onClick: onArchive, active: false },
+      { icon: IconTrash,         label: 'Delete — moves to Trash (30 days to recover)', onClick: onTrash, active: false, danger: true },
+      { icon: IconAlertTriangle, label: 'Report spam',  onClick: () => {}, active: false },
+      { icon: IconPlus,          label: 'Add label',    onClick: () => {}, active: false },
+      { icon: IconCheck,         label: 'Mark done',    onClick: () => {}, active: false },
+      { icon: IconBell,          label: 'Snooze',       onClick: () => {}, active: false },
+    ] as ActionDef[] : []),
   ];
 
   return (
@@ -114,10 +140,13 @@ interface EmailDetailProps {
 }
 
 export function EmailDetail({ emailId, onBack }: EmailDetailProps) {
-  const { emails, trash, toggleStar } = useEmailStore();
+  const { emails, activeLabel, trash, archive, restoreToInbox, permanentDelete, toggleStar } = useEmailStore();
   const { openCompose, showToast } = useUiStore();
   const [replyOpen, setReplyOpen] = useState(false);
   const [forwardOpen, setForwardOpen] = useState(false);
+
+  const inTrash   = activeLabel === 'trash';
+  const inArchive = activeLabel === 'archived';
 
   const email = emails.find(e => e.id === emailId);
 
@@ -139,6 +168,24 @@ export function EmailDetail({ emailId, onBack }: EmailDetailProps) {
   const handleTrash = () => {
     trash([email.id]);
     showToast({ message: 'Moved to Trash', type: 'info', undoAction: 'trash' });
+    onBack?.();
+  };
+
+  const handleArchive = () => {
+    archive([email.id]);
+    showToast({ message: 'Archived', type: 'info', undoAction: 'archive' });
+    onBack?.();
+  };
+
+  const handleRestore = () => {
+    restoreToInbox([email.id]);
+    showToast({ message: 'Restored to Inbox', type: 'success', undoAction: 'move' });
+    onBack?.();
+  };
+
+  const handleDeleteForever = () => {
+    permanentDelete([email.id]);
+    showToast({ message: 'Permanently deleted', type: 'info' });
     onBack?.();
   };
 
@@ -171,15 +218,43 @@ export function EmailDetail({ emailId, onBack }: EmailDetailProps) {
     <div className="email-detail-v2">
       <ActionSidebar
         email={email}
+        inTrash={inTrash}
+        inArchive={inArchive}
         onTrash={handleTrash}
+        onArchive={handleArchive}
+        onRestore={handleRestore}
+        onDeleteForever={handleDeleteForever}
         onToggleStar={() => toggleStar(email.id)}
       />
 
       <div className="detail-main">
-        <button className="detail-back-btn" onClick={onBack} aria-label="Back to inbox">
+        <button className="detail-back-btn" onClick={onBack} aria-label="Back">
           <IconArrowLeft className="w-4 h-4" />
           <span>Back</span>
         </button>
+
+        {/* Context banner for trash / archive */}
+        {inTrash && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', marginBottom: 16, background: '#fff8e1', border: '1px solid #ffe082', borderRadius: 'var(--radius-md)', fontSize: '.875rem', color: '#795548' }}>
+            <IconTrash className="w-4 h-4" style={{ flexShrink: 0, color: '#f57c00' }} />
+            <span>This email is in <strong>Trash</strong>. Messages are permanently deleted after 30 days.</span>
+            <button onClick={handleRestore} style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: 6, border: 'none', background: '#1a73e8', color: 'white', fontSize: '.8125rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              Restore to Inbox
+            </button>
+            <button onClick={handleDeleteForever} style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', fontSize: '.8125rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              Delete forever
+            </button>
+          </div>
+        )}
+        {inArchive && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', marginBottom: 16, background: 'var(--brand-50)', border: '1px solid var(--brand-200)', borderRadius: 'var(--radius-md)', fontSize: '.875rem', color: 'var(--brand-700)' }}>
+            <IconArchive className="w-4 h-4" style={{ flexShrink: 0 }} />
+            <span>This email is <strong>archived</strong> and not in your Inbox.</span>
+            <button onClick={handleRestore} style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: 6, border: 'none', background: '#1a73e8', color: 'white', fontSize: '.8125rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              Move to Inbox
+            </button>
+          </div>
+        )}
 
         <h1 className="detail-subject">{email.subject}</h1>
 

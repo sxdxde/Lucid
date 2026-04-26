@@ -5,7 +5,7 @@
 // HCI: N3 User Control — clear escape from bulk select mode
 // HCI: W4 Feature Exposure — preview mode with blue border highlights active selection
 import React, { useState, useMemo } from 'react';
-import { IconTrash, IconMailOpen, IconClose, IconNoEmail, IconNoSearch, IconCompose } from '../ui/Icons';
+import { IconTrash, IconMailOpen, IconClose, IconNoEmail, IconNoSearch, IconCompose, IconArchive, IconInbox } from '../ui/Icons';
 import { Avatar } from '../ui/Avatar';
 import { EmailRow } from './EmailRow';
 import { useEmailStore } from '../../stores/emailStore';
@@ -127,7 +127,10 @@ interface EmailListProps {
 }
 
 export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: EmailListProps) {
-  const { emails, activeLabel, searchQuery, selectedEmailId, setSelectedEmail: _setSelectedEmail, trash, markRead, getEmailsByLabel, customLabels } = useEmailStore();
+  const {
+    emails, activeLabel, searchQuery, selectedEmailId, setSelectedEmail: _setSelectedEmail,
+    trash, archive, restoreToInbox, permanentDelete, markRead, getEmailsByLabel, customLabels,
+  } = useEmailStore();
   const { showToast, userPreferences } = useUiStore();
   const { getActiveAccount } = useAccountStore();
   const activeAccount = getActiveAccount();
@@ -139,7 +142,6 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
 
   const displayedEmails = useMemo(() => {
     if (searchQuery) return searchResults;
-    // Inbox filters by active account; allmail shows everything
     const accountId = activeLabel === 'inbox' ? activeAccount?.id : null;
     return getEmailsByLabel(activeLabel, accountId ?? null);
   }, [emails, activeLabel, searchQuery, searchResults, activeAccount?.id]);
@@ -157,9 +159,14 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
   const hasChecked = checkedIds.length > 0;
   const allChecked = checked.size === displayedEmails.length && displayedEmails.length > 0;
   const someChecked = checked.size > 0 && !allChecked;
+  const n = checkedIds.length;
 
-  const handleBulkTrash = () => { trash(checkedIds); showToast({ message: `${checkedIds.length} moved to Trash`, type: 'info', undoAction: 'trash' }); setChecked(new Set()); };
-  const handleBulkRead  = () => { markRead(checkedIds, true); setChecked(new Set()); };
+  // Context-sensitive bulk actions
+  const handleBulkTrash       = () => { trash(checkedIds);           showToast({ message: `${n} moved to Trash`,     type: 'info',    undoAction: 'trash'   }); setChecked(new Set()); };
+  const handleBulkArchive     = () => { archive(checkedIds);         showToast({ message: `${n} archived`,           type: 'info',    undoAction: 'archive' }); setChecked(new Set()); };
+  const handleBulkRestore     = () => { restoreToInbox(checkedIds);  showToast({ message: `${n} restored to Inbox`,  type: 'success', undoAction: 'move'    }); setChecked(new Set()); };
+  const handleBulkDeleteForever = () => { permanentDelete(checkedIds); showToast({ message: `${n} permanently deleted`, type: 'info' }); setChecked(new Set()); };
+  const handleBulkRead        = () => { markRead(checkedIds, true);  setChecked(new Set()); };
 
   const handleSelect = (id: string) => {
     markRead([id], true);
@@ -206,14 +213,45 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
 
       {hasChecked && (
         <div className="bulk-bar">
-          <span style={{ fontSize: '.8125rem', fontWeight: 600, color: 'var(--brand-700)' }}>{checkedIds.length} selected</span>
+          <span style={{ fontSize: '.8125rem', fontWeight: 600, color: 'var(--brand-700)' }}>{n} selected</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8 }}>
-            <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handleBulkTrash}>
-              <IconTrash className="w-3.5 h-3.5" />Delete
-            </button>
-            <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem' }} onClick={handleBulkRead}>
-              <IconMailOpen className="w-3.5 h-3.5" />Mark read
-            </button>
+
+            {/* ── TRASH VIEW ── restore + delete forever */}
+            {activeLabel === 'trash' && <>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem' }} onClick={handleBulkRestore}>
+                <IconInbox className="w-3.5 h-3.5" />Restore to Inbox
+              </button>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem' }} onClick={handleBulkArchive}>
+                <IconArchive className="w-3.5 h-3.5" />Move to Archive
+              </button>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handleBulkDeleteForever}>
+                <IconTrash className="w-3.5 h-3.5" />Delete forever
+              </button>
+            </>}
+
+            {/* ── ARCHIVE VIEW ── restore to inbox + move to trash */}
+            {activeLabel === 'archived' && <>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem' }} onClick={handleBulkRestore}>
+                <IconInbox className="w-3.5 h-3.5" />Move to Inbox
+              </button>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handleBulkTrash}>
+                <IconTrash className="w-3.5 h-3.5" />Move to Trash
+              </button>
+            </>}
+
+            {/* ── INBOX / ALL OTHER VIEWS ── archive + delete + mark read */}
+            {activeLabel !== 'trash' && activeLabel !== 'archived' && <>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem' }} onClick={handleBulkArchive}>
+                <IconArchive className="w-3.5 h-3.5" />Archive
+              </button>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handleBulkTrash}>
+                <IconTrash className="w-3.5 h-3.5" />Delete
+              </button>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '.75rem' }} onClick={handleBulkRead}>
+                <IconMailOpen className="w-3.5 h-3.5" />Mark read
+              </button>
+            </>}
+
           </div>
           <button className="icon-btn" style={{ marginLeft: 'auto', color: 'var(--text-muted)' }} onClick={() => setChecked(new Set())} aria-label="Clear selection">
             <IconClose className="w-3.5 h-3.5" />

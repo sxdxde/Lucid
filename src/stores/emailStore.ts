@@ -27,6 +27,7 @@ interface EmailStore {
   archive: (ids: string[]) => void;
   trash: (ids: string[]) => void;
   permanentDelete: (ids: string[]) => void;
+  restoreToInbox: (ids: string[]) => void;
   moveToLabel: (ids: string[], label: string) => void;
   addLabel: (ids: string[], label: string) => void;
   removeLabel: (ids: string[], label: string) => void;
@@ -81,11 +82,17 @@ export const useEmailStore = create<EmailStore>()(
         }));
       },
 
+      // ── Core location transitions ──────────────────────────
+      // Rule: an email can only be in ONE "location" at a time
+      // (inbox, archived, or trash). Custom labels are always preserved.
+      // 'sent', 'drafts', 'spam' are also preserved as metadata.
+
       archive: (ids) => {
         const prev = get().emails.filter(e => ids.includes(e.id)).map(e => ({ ...e }));
         set(state => ({
           emails: state.emails.map(e => ids.includes(e.id)
-            ? { ...e, labels: [...e.labels.filter(l => l !== 'inbox'), 'archived'] }
+            // Remove both inbox and trash (works from inbox, trash, or anywhere)
+            ? { ...e, labels: [...e.labels.filter(l => l !== 'inbox' && l !== 'trash'), 'archived'] }
             : e),
           selectedEmailId: null,
           undoStack: [
@@ -99,7 +106,8 @@ export const useEmailStore = create<EmailStore>()(
         const prev = get().emails.filter(e => ids.includes(e.id)).map(e => ({ ...e }));
         set(state => ({
           emails: state.emails.map(e => ids.includes(e.id)
-            ? { ...e, labels: [...e.labels.filter(l => l !== 'inbox'), 'trash'] }
+            // Remove inbox and archived (works from inbox, archive, or anywhere)
+            ? { ...e, labels: [...e.labels.filter(l => l !== 'inbox' && l !== 'archived'), 'trash'] }
             : e),
           selectedEmailId: null,
           undoStack: [
@@ -113,6 +121,21 @@ export const useEmailStore = create<EmailStore>()(
         set(state => ({
           emails: state.emails.filter(e => !ids.includes(e.id)),
           selectedEmailId: null,
+        }));
+      },
+
+      // Restore email from trash OR archive back to inbox
+      restoreToInbox: (ids) => {
+        const prev = get().emails.filter(e => ids.includes(e.id)).map(e => ({ ...e }));
+        set(state => ({
+          emails: state.emails.map(e => ids.includes(e.id)
+            ? { ...e, labels: [...e.labels.filter(l => l !== 'trash' && l !== 'archived'), 'inbox'] }
+            : e),
+          selectedEmailId: null,
+          undoStack: [
+            { type: 'move', emails: prev, label: 'inbox' },
+            ...state.undoStack.slice(0, MAX_UNDO - 1),
+          ],
         }));
       },
 
@@ -219,18 +242,28 @@ export const useEmailStore = create<EmailStore>()(
       getEmailsByLabel: (label, accountId = null) => {
         const { emails } = get();
         return emails.filter(e => {
+          const inTrash  = e.labels.includes('trash');
+          const inSpam   = e.labels.includes('spam');
           const inLabel =
             label === 'allmail'
-              ? !e.labels.includes('trash') && !e.labels.includes('spam')
+              ? !inTrash && !inSpam
               : label === 'inbox'
-              ? e.labels.includes('inbox') && !e.labels.includes('trash')
+              ? e.labels.includes('inbox') && !inTrash
               : label === 'starred'
-              ? e.labels.includes('starred') || e.isStarred
+              // Starred: not in trash or spam
+              ? (e.isStarred) && !inTrash && !inSpam
               : label === 'archived'
-              ? e.labels.includes('archived') && !e.labels.includes('trash')
-              : e.labels.includes(label);
-          // allmail shows all accounts; inbox filters by account
-          const inAccount = label === 'allmail'
+              ? e.labels.includes('archived') && !inTrash
+              : label === 'sent'
+              ? e.labels.includes('sent') && !inTrash
+              : label === 'trash'
+              ? inTrash
+              : label === 'spam'
+              ? inSpam
+              : e.labels.includes(label) && !inTrash;
+
+          // allmail shows all accounts; inbox/archive filter by active account
+          const inAccount = (label === 'allmail' || label === 'trash' || label === 'spam')
             ? true
             : !accountId || e.account === accountId;
           return inLabel && inAccount;
@@ -238,7 +271,18 @@ export const useEmailStore = create<EmailStore>()(
       },
 
       getUnreadCount: (label) => {
-        return get().emails.filter(e => e.labels.includes(label) && !e.isRead).length;
+        const { emails } = get();
+        if (label === 'inbox') {
+          return emails.filter(e =>
+            e.labels.includes('inbox') && !e.labels.includes('trash') && !e.isRead
+          ).length;
+        }
+        if (label === 'archived') {
+          return emails.filter(e =>
+            e.labels.includes('archived') && !e.labels.includes('trash') && !e.isRead
+          ).length;
+        }
+        return emails.filter(e => e.labels.includes(label) && !e.isRead).length;
       },
     }),
     {
