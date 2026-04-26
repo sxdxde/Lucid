@@ -9,7 +9,7 @@ import { useAccountStore } from '../../stores/accountStore';
 import { useSearch } from '../../hooks/useSearch';
 import {
   IconSearch, IconSettings, IconClose, IconLogOut,
-  IconPlus, IconHelpCircle, IconGrid,
+  IconPlus, IconHelpCircle,
 } from '../ui/Icons';
 import { Avatar } from '../ui/Avatar';
 import { Tooltip } from '../ui/Tooltip';
@@ -44,7 +44,8 @@ interface TopBarProps {
 
 export function TopBar({ onNavigate }: TopBarProps) {
   const { searchQuery, setSearchQuery, setActiveLabel } = useEmailStore();
-  const { setSearchFocused, searchFocused, setKeyboardShortcutsVisible } = useUiStore();
+  const { setSearchFocused, searchFocused, setKeyboardShortcutsVisible, userPreferences, setPreference } = useUiStore();
+  const zoom = typeof userPreferences.zoom === 'number' ? userPreferences.zoom : 100;
   const { accounts, activeAccountId, switchAccount, signOutAccount, addAccount, getActiveAccount } = useAccountStore();
   const activeAccount = getActiveAccount();
 
@@ -103,12 +104,20 @@ export function TopBar({ onNavigate }: TopBarProps) {
 
   return (
     <header className="topbar" role="banner">
-      {/* Logo */}
+      {/* Logo — always returns to inbox */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 160, flexShrink: 0 }}>
         <button
-          onClick={() => { setActiveLabel('inbox'); setLocalQuery(''); setSearchQuery(''); }}
-          style={{ display: 'flex', alignItems: 'center', gap: 0, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px 4px 4px', borderRadius: 6 }}
+          onClick={() => {
+            setActiveLabel('inbox');
+            setLocalQuery('');
+            setSearchQuery('');
+            onNavigate('/inbox');
+          }}
+          style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px 4px 4px', borderRadius: 6, transition: 'opacity 120ms' }}
+          onMouseOver={e => (e.currentTarget.style.opacity = '.8')}
+          onMouseOut={e => (e.currentTarget.style.opacity = '1')}
           aria-label="Go to inbox"
+          title="Go to inbox"
         >
           <LucidWordmark />
         </button>
@@ -214,6 +223,31 @@ export function TopBar({ onNavigate }: TopBarProps) {
           <button className="icon-btn" onClick={() => setKeyboardShortcutsVisible(true)} aria-label="Help and keyboard shortcuts">
             <IconHelpCircle className="w-5 h-5" />
           </button>
+        </Tooltip>
+
+        {/* ── Zoom / resize widget ── */}
+        <Tooltip content={`Interface zoom (${zoom}%)`} side="bottom">
+          <div className="zoom-widget" role="group" aria-label="Interface zoom control">
+            <button
+              className="zoom-btn"
+              onClick={() => setPreference('zoom', Math.max(70, zoom - 10))}
+              disabled={zoom <= 70}
+              aria-label="Zoom out"
+              title="Zoom out"
+            >
+              −
+            </button>
+            <span className="zoom-label">{zoom}%</span>
+            <button
+              className="zoom-btn"
+              onClick={() => setPreference('zoom', Math.min(150, zoom + 10))}
+              disabled={zoom >= 150}
+              aria-label="Zoom in"
+              title="Zoom in"
+            >
+              +
+            </button>
+          </div>
         </Tooltip>
 
         <Tooltip content="Settings" side="bottom">

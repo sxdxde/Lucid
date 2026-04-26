@@ -240,11 +240,13 @@ function AppearanceTab({ pref, setPreference }: AppearanceTabProps) {
 
       <div>
         <h3 style={sectionTitle}>Interface size</h3>
-        <p style={{ ...sectionDesc, marginBottom: 20 }}>Scales the entire UI — icons, text, and spacing all adjust proportionally.</p>
+        <p style={{ ...sectionDesc, marginBottom: 20 }}>
+          Scales the entire UI. You can also use the <strong>± widget</strong> in the top-right of the toolbar for fine control.
+        </p>
         <div style={{ display: 'flex', gap: 16 }}>
-          <OptionCard label="Small" desc="Compact, more content fits" active={pref.zoom === 'small'} onClick={() => setPreference('zoom', 'small')} />
-          <OptionCard label="Default" desc="Standard size (recommended)" active={!pref.zoom || pref.zoom === 'default'} onClick={() => setPreference('zoom', 'default')} />
-          <OptionCard label="Large" desc="Larger text and controls" active={pref.zoom === 'large'} onClick={() => setPreference('zoom', 'large')} />
+          <OptionCard label="Small (85%)"   desc="Compact, more content fits"    active={pref.zoom === 85}  onClick={() => setPreference('zoom', 85)}  />
+          <OptionCard label="Default (100%)" desc="Standard size (recommended)"  active={!pref.zoom || pref.zoom === 100} onClick={() => setPreference('zoom', 100)} />
+          <OptionCard label="Large (115%)"  desc="Larger text and controls"       active={pref.zoom === 115} onClick={() => setPreference('zoom', 115)} />
         </div>
       </div>
     </div>

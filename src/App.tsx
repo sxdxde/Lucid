@@ -28,14 +28,15 @@ function MainApp() {
   const [settingsTab, setSettingsTab] = useState<string>('appearance');
 
   useEffect(() => {
-    const sizes: Record<string, string> = { small: '12px', default: '14px', large: '16px' };
-    document.documentElement.style.fontSize = sizes[userPreferences.zoom ?? 'default'] ?? '14px';
+    const pct = typeof userPreferences.zoom === 'number' ? userPreferences.zoom : 100;
+    document.documentElement.style.fontSize = (14 * pct / 100).toFixed(2) + 'px';
     if (userPreferences.theme === 'dark') document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   }, []);
 
   const handleNavigate = (path: string) => {
     if (path === '/settings') { setSettingsTab('appearance'); setView('settings'); }
+    if (path === '/inbox')    { setSelectedEmail(null); setPreviewEmailId(null); setView('inbox'); }
   };
 
   const handleEmailSelect = (id: string) => {

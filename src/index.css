@@ -1811,3 +1811,64 @@ html.dark .compose-recipient-row,
 html.dark .compose-subject-row,
 html.dark .compose-rich-body,
 html.dark .compose-toolbar { background: var(--surface); color: var(--text-primary); }
+
+/* ── Zoom widget in TopBar ───────────────────────────────── */
+.zoom-widget {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--gray-100);
+  height: 32px;
+  transition: border-color 120ms;
+}
+.zoom-widget:hover { border-color: var(--gray-300); }
+
+.zoom-btn {
+  width: 28px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 100ms, color 100ms;
+  flex-shrink: 0;
+}
+.zoom-btn:hover:not(:disabled) {
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+.zoom-btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.zoom-label {
+  min-width: 42px;
+  text-align: center;
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -.01em;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* Dark mode zoom widget */
+html.dark .zoom-widget { background: var(--surface-raised); border-color: var(--border); }
+html.dark .zoom-widget:hover { border-color: var(--border-strong); }
+html.dark .zoom-btn:hover:not(:disabled) { background: var(--surface-active); color: var(--brand-200); }
+html.dark .zoom-label { color: var(--text-primary); border-color: var(--border); }

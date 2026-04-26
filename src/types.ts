@@ -91,7 +91,7 @@ export interface ConfirmDialogConfig {
 export interface UserPreferences {
   density: 'compact' | 'comfortable' | 'spacious';
   theme: 'light' | 'dark';
-  zoom: 'small' | 'default' | 'large';
+  zoom: number; // percentage 70–150, default 100
   keyboardShortcutsEnabled: boolean;
   customShortcuts: Record<string, string>;
 }

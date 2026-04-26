@@ -69,7 +69,7 @@ export const useUiStore = create<UiStore>()(
       userPreferences: {
         density: 'comfortable',
         theme: 'light',
-        zoom: 'default',
+        zoom: 100,
         keyboardShortcutsEnabled: true,
         customShortcuts: { ...DEFAULT_SHORTCUTS },
       },
@@ -127,7 +127,7 @@ export const useUiStore = create<UiStore>()(
           userPreferences: { ...state.userPreferences, [key]: value },
         }));
         if (key === 'theme') applyTheme(value as string);
-        if (key === 'zoom') applyZoom(value as string);
+        if (key === 'zoom') applyZoom(value as number);
       },
 
       setCustomShortcut: (actionId, key) => {
@@ -157,7 +157,7 @@ export const useUiStore = create<UiStore>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           applyTheme(state.userPreferences?.theme ?? 'light');
-          applyZoom(state.userPreferences?.zoom ?? 'default');
+          applyZoom(state.userPreferences?.zoom ?? 100);
         }
       },
     }
@@ -170,7 +170,7 @@ function applyTheme(value: string) {
   else root.classList.remove('dark');
 }
 
-function applyZoom(value: string) {
-  const sizes: Record<string, string> = { small: '12px', default: '14px', large: '16px' };
-  document.documentElement.style.fontSize = sizes[value] ?? '14px';
+function applyZoom(value: number | string) {
+  const pct = typeof value === 'number' ? value : 100;
+  document.documentElement.style.fontSize = (14 * pct / 100).toFixed(2) + 'px';
 }
