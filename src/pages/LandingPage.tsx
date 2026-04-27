@@ -1,17 +1,123 @@
 // Persuasion framework (Cialdini): Authority, Social Proof, Liking, Reciprocity, Scarcity, Commitment
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-// ── Night sky canvas ─────────────────────────────────────────
-interface Star {
-  x: number; y: number;
-  r: number; baseAlpha: number;
-  speed: number; offset: number;
+// ── Feature icon SVGs (no emoji) ──────────────────────────────
+function IconLightning() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  );
+}
+function IconHexagon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
+      <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+function IconHalfMoon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+function IconTag() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+      <circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+function IconUndo() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7v6h6" />
+      <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+    </svg>
+  );
+}
+function IconSparkle() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+    </svg>
+  );
 }
 
-function NightSky() {
+// ── Postal Globe ──────────────────────────────────────────────
+// Animated light-mode world grid: cities connected by red dashed lines
+// suggesting historic post office mail routes.
+
+interface GlobeCity  { name: string; lat: number; lon: number; }
+interface GlobeRoute { fromIdx: number; toIdx: number; }
+interface MailPacket { routeIdx: number; t: number; speed: number; }
+
+const GLOBE_CITIES: GlobeCity[] = [
+  { name: 'London',     lat:  51.5,  lon:  -0.1  },
+  { name: 'New York',   lat:  40.7,  lon: -74.0  },
+  { name: 'Paris',      lat:  48.9,  lon:   2.3  },
+  { name: 'Berlin',     lat:  52.5,  lon:  13.4  },
+  { name: 'Mumbai',     lat:  19.1,  lon:  72.9  },
+  { name: 'Tokyo',      lat:  35.7,  lon: 139.7  },
+  { name: 'Sydney',     lat: -33.9,  lon: 151.2  },
+  { name: 'Sao Paulo',  lat: -23.5,  lon: -46.6  },
+  { name: 'Cairo',      lat:  30.0,  lon:  31.2  },
+  { name: 'Moscow',     lat:  55.8,  lon:  37.6  },
+  { name: 'Singapore',  lat:   1.3,  lon: 103.8  },
+  { name: 'Chicago',    lat:  41.9,  lon: -87.6  },
+  { name: 'Dubai',      lat:  25.2,  lon:  55.3  },
+  { name: 'Nairobi',    lat:  -1.3,  lon:  36.8  },
+];
+
+const GLOBE_ROUTES: GlobeRoute[] = [
+  { fromIdx:  0, toIdx:  1 }, // London – New York
+  { fromIdx:  0, toIdx:  2 }, // London – Paris
+  { fromIdx:  2, toIdx:  3 }, // Paris – Berlin
+  { fromIdx:  3, toIdx:  9 }, // Berlin – Moscow
+  { fromIdx:  9, toIdx:  4 }, // Moscow – Mumbai
+  { fromIdx:  4, toIdx:  5 }, // Mumbai – Tokyo
+  { fromIdx:  5, toIdx:  6 }, // Tokyo – Sydney
+  { fromIdx:  1, toIdx:  7 }, // New York – Sao Paulo
+  { fromIdx:  0, toIdx:  8 }, // London – Cairo
+  { fromIdx:  8, toIdx:  4 }, // Cairo – Mumbai
+  { fromIdx:  4, toIdx: 10 }, // Mumbai – Singapore
+  { fromIdx:  5, toIdx: 10 }, // Tokyo – Singapore
+  { fromIdx:  1, toIdx: 11 }, // New York – Chicago
+  { fromIdx:  7, toIdx: 13 }, // Sao Paulo – Nairobi
+  { fromIdx:  8, toIdx: 12 }, // Cairo – Dubai
+  { fromIdx: 12, toIdx:  4 }, // Dubai – Mumbai
+  { fromIdx: 13, toIdx:  8 }, // Nairobi – Cairo
+  { fromIdx: 11, toIdx:  1 }, // Chicago – New York
+];
+
+function gcPoint(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number,
+  t: number,
+): [number, number] {
+  const phi1 = lat1 * Math.PI / 180, lam1 = lon1 * Math.PI / 180;
+  const phi2 = lat2 * Math.PI / 180, lam2 = lon2 * Math.PI / 180;
+  const d = Math.acos(Math.max(-1, Math.min(1,
+    Math.sin(phi1)*Math.sin(phi2) + Math.cos(phi1)*Math.cos(phi2)*Math.cos(lam2-lam1),
+  )));
+  if (d < 1e-6) return [lat1, lon1];
+  const A = Math.sin((1-t)*d)/Math.sin(d);
+  const B = Math.sin(t*d)    /Math.sin(d);
+  const x = A*Math.cos(phi1)*Math.cos(lam1) + B*Math.cos(phi2)*Math.cos(lam2);
+  const y = A*Math.cos(phi1)*Math.sin(lam1) + B*Math.cos(phi2)*Math.sin(lam2);
+  const z = A*Math.sin(phi1)                + B*Math.sin(phi2);
+  return [
+    Math.atan2(z, Math.sqrt(x*x+y*y)) * 180/Math.PI,
+    Math.atan2(y, x) * 180/Math.PI,
+  ];
+}
+
+function PostalGlobe() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef  = useRef({ x: -9999, y: -9999 });
-  const starsRef  = useRef<Star[]>([]);
   const rafRef    = useRef<number>(0);
 
   useEffect(() => {
@@ -19,77 +125,243 @@ function NightSky() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
 
+    let rotation  = -0.4;
+    let dashOff   = 0;
+
+    const packets: MailPacket[] = GLOBE_ROUTES.map((_, i) => ({
+      routeIdx: i,
+      t: Math.random(),
+      speed: 0.00065 + Math.random() * 0.00055,
+    }));
+
     const resize = () => {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-      // Regenerate stars to fill new size
-      starsRef.current = Array.from({ length: 280 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        r: Math.random() * 1.8 + 0.3,
-        baseAlpha: Math.random() * 0.55 + 0.15,
-        speed: Math.random() * 0.6 + 0.15,
-        offset: Math.random() * Math.PI * 2,
-      }));
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
     };
     resize();
     window.addEventListener('resize', resize);
 
-    let t = 0;
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      t += 0.012;
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
 
-      const { x: mx, y: my } = mouseRef.current;
+      // Center the globe in the panel
+      const cx = W / 2;
+      const cy = H / 2;
+      const r  = Math.min(W * 0.44, H * 0.44, 320);
 
-      for (const star of starsRef.current) {
-        const twinkle = star.baseAlpha + Math.sin(t * star.speed + star.offset) * 0.18;
-        const dx = star.x - mx;
-        const dy = star.y - my;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const proximity = Math.max(0, 1 - dist / 130);
-        const alpha  = Math.min(1, twinkle + proximity * 0.85);
-        const radius = star.r + proximity * 3.5;
+      rotation += 0.00105;
+      dashOff  -= 0.28;
 
-        // Soft glow halo near cursor
-        if (proximity > 0.05) {
-          const g = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, radius * 5);
-          g.addColorStop(0, `rgba(160,200,255,${proximity * 0.45})`);
-          g.addColorStop(1, 'transparent');
+      const to3D = (lat: number, lon: number, rad: number): [number, number, number] => {
+        const phi   = (90 - lat) * Math.PI / 180;
+        const theta = lon * Math.PI / 180 + rotation;
+        return [
+          rad * Math.sin(phi) * Math.cos(theta),
+          -rad * Math.cos(phi),
+          rad * Math.sin(phi) * Math.sin(theta),
+        ];
+      };
+
+      const proj = (p: [number, number, number]) => ({
+        x: cx + p[0], y: cy + p[1], vis: p[2] >= 0,
+      });
+
+      // Atmosphere halo
+      const atm = ctx.createRadialGradient(cx, cy, r * 0.88, cx, cy, r * 1.18);
+      atm.addColorStop(0, 'rgba(200,160,80,0.12)');
+      atm.addColorStop(1, 'rgba(200,160,80,0)');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 1.18, 0, Math.PI * 2);
+      ctx.fillStyle = atm;
+      ctx.fill();
+
+      // Globe surface fill
+      const fill = ctx.createRadialGradient(cx - r*0.22, cy - r*0.25, r*0.04, cx, cy, r);
+      fill.addColorStop(0,   'rgba(255,253,248,0.98)');
+      fill.addColorStop(0.65,'rgba(250,244,230,0.96)');
+      fill.addColorStop(1,   'rgba(236,222,198,0.93)');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = fill;
+      ctx.fill();
+
+      const LAT_LINES = [-60, -30, 0, 30, 60];
+      const LON_LINES = Array.from({ length: 12 }, (_, i) => i * 30);
+      const SEG = 128;
+
+      const drawGrid = (front: boolean) => {
+        ctx.strokeStyle = front
+          ? 'rgba(120, 82, 42, 0.27)'
+          : 'rgba(120, 82, 42, 0.09)';
+        ctx.lineWidth = front ? 0.8 : 0.45;
+
+        for (const lat of LAT_LINES) {
           ctx.beginPath();
-          ctx.arc(star.x, star.y, radius * 5, 0, Math.PI * 2);
-          ctx.fillStyle = g;
-          ctx.fill();
+          let pen = false;
+          for (let s = 0; s <= SEG; s++) {
+            const lon = (s / SEG) * 360 - 180;
+            const { x, y, vis } = proj(to3D(lat, lon, r));
+            if (vis !== front) { pen = false; continue; }
+            pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+            pen = true;
+          }
+          ctx.stroke();
         }
 
-        // Star dot
+        for (const lon of LON_LINES) {
+          ctx.beginPath();
+          let pen = false;
+          for (let s = 0; s <= SEG; s++) {
+            const lat = (s / SEG) * 180 - 90;
+            const { x, y, vis } = proj(to3D(lat, lon, r));
+            if (vis !== front) { pen = false; continue; }
+            pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+            pen = true;
+          }
+          ctx.stroke();
+        }
+      };
+
+      const drawRoutes = (front: boolean) => {
+        ctx.setLineDash([5, 8]);
+        ctx.lineDashOffset = dashOff;
+        ctx.strokeStyle = front
+          ? 'rgba(185, 45, 35, 0.62)'
+          : 'rgba(185, 45, 35, 0.13)';
+        ctx.lineWidth = front ? 1.5 : 0.7;
+
+        for (const route of GLOBE_ROUTES) {
+          const c1 = GLOBE_CITIES[route.fromIdx];
+          const c2 = GLOBE_CITIES[route.toIdx];
+          ctx.beginPath();
+          let pen = false;
+          for (let s = 0; s <= 90; s++) {
+            const [lat, lon] = gcPoint(c1.lat, c1.lon, c2.lat, c2.lon, s / 90);
+            const { x, y, vis } = proj(to3D(lat, lon, r * 1.009));
+            if (vis !== front) { pen = false; continue; }
+            pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+            pen = true;
+          }
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      };
+
+      drawGrid(false);
+      drawRoutes(false);
+
+      // Globe border
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(130, 88, 44, 0.28)';
+      ctx.lineWidth   = 1.2;
+      ctx.stroke();
+
+      drawGrid(true);
+      drawRoutes(true);
+
+      // City markers
+      for (const city of GLOBE_CITIES) {
+        const { x, y, vis } = proj(to3D(city.lat, city.lon, r));
+        if (!vis) continue;
+
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, 10);
+        glow.addColorStop(0, 'rgba(185,45,35,0.38)');
+        glow.addColorStop(1, 'transparent');
         ctx.beginPath();
-        ctx.arc(star.x, star.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(220,235,255,${alpha})`;
+        ctx.arc(x, y, 10, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
         ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+        ctx.fillStyle   = '#b92d23';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+        ctx.lineWidth   = 1.6;
+        ctx.stroke();
+
+        ctx.font         = '500 9px Inter, system-ui, sans-serif';
+        ctx.fillStyle    = 'rgba(65, 35, 12, 0.88)';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(city.name, x, y - 9);
+      }
+
+      // Mail envelopes
+      for (const pkt of packets) {
+        const route = GLOBE_ROUTES[pkt.routeIdx];
+        const c1    = GLOBE_CITIES[route.fromIdx];
+        const c2    = GLOBE_CITIES[route.toIdx];
+
+        const [lat, lon] = gcPoint(c1.lat, c1.lon, c2.lat, c2.lon, pkt.t);
+        const { x, y, vis } = proj(to3D(lat, lon, r * 1.022));
+
+        if (vis) {
+          const ahead = Math.min(1, pkt.t + 0.018);
+          const [la2, lo2] = gcPoint(c1.lat, c1.lon, c2.lat, c2.lon, ahead);
+          const { x: x2, y: y2 } = proj(to3D(la2, lo2, r * 1.022));
+          const angle = Math.atan2(y2 - y, x2 - x);
+
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(angle);
+
+          const ew = 12, eh = 8;
+
+          ctx.shadowColor    = 'rgba(160, 35, 25, 0.45)';
+          ctx.shadowBlur     = 5;
+          ctx.shadowOffsetX  = 0.5;
+          ctx.shadowOffsetY  = 0.5;
+
+          ctx.fillStyle = '#b92d23';
+          ctx.beginPath();
+          ctx.rect(-ew/2, -eh/2, ew, eh);
+          ctx.fill();
+
+          ctx.shadowBlur    = 0;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+
+          ctx.strokeStyle = 'rgba(255,255,255,0.82)';
+          ctx.lineWidth   = 0.95;
+          ctx.beginPath();
+          ctx.moveTo(-ew/2, -eh/2);
+          ctx.lineTo(0, eh * 0.18);
+          ctx.lineTo(ew/2, -eh/2);
+          ctx.stroke();
+
+          ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+          ctx.lineWidth   = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(-ew/2 + 1.5, eh/2 - 2);
+          ctx.lineTo(ew/2 - 1.5, eh/2 - 2);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
+        pkt.t += pkt.speed;
+        if (pkt.t > 1) pkt.t = 0;
       }
 
       rafRef.current = requestAnimationFrame(draw);
     };
-    draw();
 
-    const onMove = (e: MouseEvent) => { mouseRef.current = { x: e.clientX, y: e.clientY }; };
-    const onLeave = () => { mouseRef.current = { x: -9999, y: -9999 }; };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseleave', onLeave);
+    draw();
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseleave', onLeave);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
     />
   );
 }
@@ -147,7 +419,7 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
   const [passErr,  setPassErr]  = useState('');
   const [loading,  setLoading]  = useState(false);
 
-  const firstName = (email.split('@')[0]?.split('.')[0] ?? 'User');
+  const firstName   = (email.split('@')[0]?.split('.')[0] ?? 'User');
   const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
   const handleEmailLogin = (e: React.FormEvent) => {
@@ -160,7 +432,7 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
     setTimeout(() => { setLoading(false); onSuccess(displayName); }, 1100);
   };
 
-  const handleSocial = (provider: string) => {
+  const handleSocial = (_provider: string) => {
     setLoading(true);
     setTimeout(() => { setLoading(false); onSuccess('Sudarshan'); }, 1300);
   };
@@ -171,13 +443,11 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 440, boxShadow: '0 32px 80px rgba(0,0,0,.25)', overflow: 'hidden', animation: 'loginPop .28s cubic-bezier(.22,1,.36,1)' }}>
-        {/* Top */}
         <div style={{ padding: '36px 44px 0', textAlign: 'center' }}>
           <LucidWordmark size="md" />
           <h2 style={{ margin: '20px 0 4px', fontSize: '1.375rem', fontWeight: 800, color: '#202124', letterSpacing: '-.025em' }}>Sign in to Lucid</h2>
           <p style={{ margin: '0 0 24px', fontSize: '.875rem', color: '#5f6368' }}>Choose how you'd like to continue</p>
 
-          {/* 3-tab method selector */}
           <div style={{ display: 'flex', background: '#f1f3f4', borderRadius: 12, padding: 4, gap: 2, marginBottom: 24 }}>
             {([['email','Email & Password'],['google','Google'],['github','GitHub']] as const).map(([id, label]) => (
               <button
@@ -196,7 +466,6 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
           </div>
         </div>
 
-        {/* Form body */}
         <div style={{ padding: '0 44px 36px' }}>
           {tab === 'email' && (
             <form onSubmit={handleEmailLogin}>
@@ -213,7 +482,6 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
                 {emailErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{emailErr}</p>}
               </div>
               <div style={{ marginBottom: 20 }}>
-                {/* Password visible by default — no masking as requested */}
                 <input
                   type="text"
                   placeholder="Password (visible)"
@@ -297,7 +565,6 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
           )}
         </div>
 
-        {/* Footer note */}
         <div style={{ padding: '12px 44px 28px', borderTop: '1px solid #f1f3f4', textAlign: 'center' }}>
           <p style={{ margin: 0, fontSize: '.75rem', color: '#9aa0a6' }}>
             By continuing you agree to Lucid's{' '}
@@ -310,20 +577,20 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
   );
 }
 
-// ── Feature cards ─────────────────────────────────────────────
+// ── Feature cards (no emojis — SVG icons) ────────────────────
 const FEATURES = [
-  { icon: '⚡', title: 'Blazing fast', desc: 'Keyboard shortcuts for everything. Search, compose, archive — all without touching your mouse.', badge: 'Power user' },
-  { icon: '🎨', title: 'HCI-designed', desc: 'Every pixel informed by 40 years of usability research. Less cognitive load, more flow state.', badge: 'Research-backed' },
-  { icon: '🌙', title: 'Night & day', desc: 'Beautiful dark and light themes. Your eyes will never tire, whether it is noon or midnight.', badge: 'Eye-friendly' },
-  { icon: '🏷️', title: 'Smart labels', desc: 'Create custom folders, labels, and filters. Your inbox, your rules, drag to reorder.', badge: 'Fully yours' },
-  { icon: '↩️', title: 'Undo anything', desc: 'Every destructive action is reversible. Archive, delete, move — all undoable with one keystroke.', badge: 'Always safe' },
-  { icon: '✨', title: 'Smart replies', desc: 'Context-aware one-tap responses. Respond in seconds without sacrificing your voice.', badge: 'AI-assisted' },
+  { Icon: IconLightning, title: 'Blazing fast',  desc: 'Keyboard shortcuts for everything. Search, compose, archive — all without touching your mouse.', badge: 'Power user'       },
+  { Icon: IconHexagon,   title: 'HCI-designed',  desc: 'Every pixel informed by 40 years of usability research. Less cognitive load, more flow state.',  badge: 'Research-backed'  },
+  { Icon: IconHalfMoon,  title: 'Night and day', desc: 'Beautiful dark and light themes. Your eyes will never tire, whether it is noon or midnight.',     badge: 'Eye-friendly'     },
+  { Icon: IconTag,       title: 'Smart labels',  desc: 'Create custom folders, labels, and filters. Your inbox, your rules, drag to reorder.',            badge: 'Fully yours'      },
+  { Icon: IconUndo,      title: 'Undo anything', desc: 'Every destructive action is reversible. Archive, delete, move — all undoable with one keystroke.', badge: 'Always safe'     },
+  { Icon: IconSparkle,   title: 'Smart replies', desc: 'Context-aware one-tap responses. Respond in seconds without sacrificing your voice.',             badge: 'AI-assisted'      },
 ];
 
 const TESTIMONIALS = [
-  { quote: "Switched from Gmail three months ago. Keyboard shortcuts alone saved me 40 minutes a day.", author: "Priya Sharma", role: "Product Designer · Figma", avatar: "PS", color: "#7c3aed" },
-  { quote: "The dark mode is the most beautiful I've seen in any email client. Zero eye strain.", author: "Arjun Mehta", role: "Senior Engineer · Atlassian", avatar: "AM", color: "#0891b2" },
-  { quote: "Finally an email app that respects my workflow. Labels, shortcuts, undo — it just works.", author: "Sarah Johnson", role: "UX Researcher · Google", avatar: "SJ", color: "#059669" },
+  { quote: "Switched from Gmail three months ago. Keyboard shortcuts alone saved me 40 minutes a day.", author: "Priya Sharma",  role: "Product Designer · Figma",       avatar: "PS", color: "#7c3aed" },
+  { quote: "The dark mode is the most beautiful I've seen in any email client. Zero eye strain.",         author: "Arjun Mehta", role: "Senior Engineer · Atlassian",      avatar: "AM", color: "#0891b2" },
+  { quote: "Finally an email app that respects my workflow. Labels, shortcuts, undo — it just works.",    author: "Sarah Johnson",role: "UX Researcher · Google",           avatar: "SJ", color: "#059669" },
 ];
 
 // ── Landing page ──────────────────────────────────────────────
@@ -332,110 +599,118 @@ export function LandingPage({ onLogin }: { onLogin: (name: string) => void }) {
 
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden', position: 'relative' }}>
-      {/* Night sky canvas — visible in hero section */}
-      <NightSky />
 
-      {/* ── Sticky nav ── */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(5,5,16,.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 48px', height: 64 }}>
-        <LucidWordmark size="sm" dark />
+      {/* ── Sticky nav (light) ── */}
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        background: 'rgba(253,250,246,.93)',
+        backdropFilter: 'blur(18px)',
+        borderBottom: '1px solid rgba(160,120,70,.16)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 48px', height: 64,
+      }}>
+        <LucidWordmark size="sm" />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => setShowLogin(true)}
-            style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(255,255,255,.2)', background: 'transparent', color: 'rgba(255,255,255,.85)', fontSize: '.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 120ms' }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,.1)'}
+            style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(90,55,20,.18)', background: 'transparent', color: '#4a3318', fontSize: '.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 120ms' }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(90,55,20,.06)'}
             onMouseOut={e => e.currentTarget.style.background = 'transparent'}
           >Sign in</button>
           <button onClick={() => setShowLogin(true)}
-            style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: '#1a73e8', color: 'white', fontSize: '.875rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 120ms', boxShadow: '0 2px 12px rgba(26,115,232,.5)' }}
+            style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: '#1a73e8', color: 'white', fontSize: '.875rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 120ms', boxShadow: '0 2px 12px rgba(26,115,232,.32)' }}
             onMouseOver={e => e.currentTarget.style.background = '#1557b0'}
             onMouseOut={e => e.currentTarget.style.background = '#1a73e8'}
           >Get started free</button>
         </div>
       </nav>
 
-      {/* ── Hero (dark — stars visible here) ── */}
-      <section style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '120px 48px 100px', textAlign: 'center', background: 'linear-gradient(180deg, #050510 0%, #0a0a20 60%, #12091e 100%)' }}>
-        {/* Early access badge */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 18px', borderRadius: 999, border: '1px solid rgba(66,133,244,.4)', background: 'rgba(26,115,232,.12)', fontSize: '.8125rem', fontWeight: 600, color: '#669df6', marginBottom: 40 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4285f4', animation: 'pulse 2s ease-in-out infinite', display: 'inline-block' }} />
-          Early access — join 50,000+ users already on Lucid
+      {/* ── Hero — two-column: text left, globe right ── */}
+      <section style={{
+        position: 'relative', zIndex: 1,
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'stretch',
+        background: 'linear-gradient(135deg, #fdfaf5 0%, #f9f3e8 55%, #f0e6d0 100%)',
+        overflow: 'hidden',
+      }}>
+        {/* Left column — text content */}
+        <div style={{
+          display: 'flex', flexDirection: 'column', justifyContent: 'center',
+          padding: '100px 56px 80px 72px',
+          flex: '0 0 50%', maxWidth: 640,
+          position: 'relative', zIndex: 2,
+        }}>
+          {/* Postal badge */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '6px 16px', borderRadius: 999,
+            border: '1px solid rgba(185,45,35,.3)',
+            background: 'rgba(185,45,35,.07)',
+            fontSize: '.8rem', fontWeight: 600, color: '#b92d23',
+            marginBottom: 32, alignSelf: 'flex-start',
+          }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#b92d23', animation: 'pulse 2s ease-in-out infinite', display: 'inline-block' }} />
+            Connecting 50,000 inboxes worldwide
+          </div>
+
+          <h1 style={{
+            fontSize: 'clamp(2.5rem, 4.2vw, 4.5rem)',
+            fontWeight: 900, letterSpacing: '-.04em',
+            color: '#2a1a08', margin: '0 0 20px', lineHeight: 1.09,
+          }}>
+            Email,{' '}
+            <span style={{ whiteSpace: 'nowrap' }}>reimagined</span>
+            <br />
+            <span style={{ background: 'linear-gradient(135deg, #4285f4 0%, #ea4335 38%, #b92d23 62%, #d97706 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              for how you think
+            </span>
+          </h1>
+
+          <p style={{ fontSize: '1.1rem', color: '#6b4a2a', maxWidth: 460, margin: '0 0 40px', lineHeight: 1.68 }}>
+            Built on 40 years of HCI research. Lucid cuts cognitive load so you can focus on what matters — not your inbox.
+          </p>
+
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
+            <button onClick={() => setShowLogin(true)}
+              style={{ padding: '15px 36px', borderRadius: 12, border: 'none', background: '#1a73e8', color: 'white', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 140ms', boxShadow: '0 4px 20px rgba(26,115,232,.4)' }}
+              onMouseOver={e => { e.currentTarget.style.background = '#1557b0'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseOut={e => { e.currentTarget.style.background = '#1a73e8'; e.currentTarget.style.transform = 'none'; }}
+            >Start for free</button>
+            <button onClick={() => onLogin('Demo User')}
+              style={{ padding: '15px 36px', borderRadius: 12, border: '1.5px solid rgba(90,55,20,.22)', background: 'rgba(255,255,255,0.7)', color: '#4a3318', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', backdropFilter: 'blur(8px)', transition: 'all 120ms' }}
+              onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.92)'}
+              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.7)'}
+            >Try the demo</button>
+          </div>
+
+          <p style={{ fontSize: '.8rem', color: 'rgba(107,74,42,.55)', margin: '0 0 40px' }}>
+            No credit card required · Free forever plan
+          </p>
+
+          {/* Route legend */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '.7rem', color: '#b92d23', fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', marginRight: 4 }}>Active routes</span>
+            <span style={{ width: 18, height: 0, borderTop: '1.5px dashed rgba(185,45,35,.55)', display: 'inline-block' }} />
+            {['London','New York','Tokyo','Mumbai','Cairo','Sydney'].map(c => (
+              <span key={c} style={{ fontSize: '.7rem', color: 'rgba(90,55,20,.7)', padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(185,45,35,.2)', background: 'rgba(185,45,35,.05)' }}>{c}</span>
+            ))}
+          </div>
         </div>
 
-        <h1 style={{ fontSize: 'clamp(2.8rem, 6vw, 5rem)', fontWeight: 900, letterSpacing: '-.04em', color: 'white', margin: '0 0 24px', lineHeight: 1.08, maxWidth: 800 }}>
-          Email, reimagined{' '}<br />
-          <span style={{ background: 'linear-gradient(135deg, #4285f4 0%, #ea4335 35%, #fbbc04 65%, #34a853 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            for how you think
-          </span>
-        </h1>
-
-        <p style={{ fontSize: '1.1875rem', color: 'rgba(255,255,255,.65)', maxWidth: 520, margin: '0 auto 48px', lineHeight: 1.65 }}>
-          Built on 40 years of HCI research. Lucid cuts cognitive load so you can focus on what matters — not your inbox.
-        </p>
-
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
-          <button onClick={() => setShowLogin(true)}
-            style={{ padding: '16px 40px', borderRadius: 14, border: 'none', background: '#1a73e8', color: 'white', fontSize: '1.0625rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 140ms', boxShadow: '0 4px 24px rgba(26,115,232,.55)' }}
-            onMouseOver={e => { e.currentTarget.style.background = '#1557b0'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-            onMouseOut={e => { e.currentTarget.style.background = '#1a73e8'; e.currentTarget.style.transform = 'none'; }}
-          >Start for free →</button>
-          <button onClick={() => onLogin('Demo User')}
-            style={{ padding: '16px 40px', borderRadius: 14, border: '1.5px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.06)', color: 'rgba(255,255,255,.9)', fontSize: '1.0625rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', backdropFilter: 'blur(8px)', transition: 'all 120ms' }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,.12)'}
-            onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,.06)'}
-          >Try the demo</button>
-        </div>
-        <p style={{ fontSize: '.8125rem', color: 'rgba(255,255,255,.35)' }}>No credit card required · Free forever plan</p>
-
-        {/* Browser mockup */}
-        <div style={{ margin: '72px auto 0', maxWidth: 860, borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(255,255,255,.1)', boxShadow: '0 40px 100px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.05)', background: '#0d0d20' }}>
-          {/* Browser chrome */}
-          <div style={{ background: '#1a1a2e', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(255,255,255,.08)' }}>
-            {['#ff5f57','#ffbd2e','#28c840'].map(c => <div key={c} style={{ width: 12, height: 12, borderRadius: '50%', background: c }} />)}
-            <div style={{ flex: 1, background: 'rgba(255,255,255,.07)', borderRadius: 8, padding: '5px 12px', fontSize: '.75rem', color: 'rgba(255,255,255,.4)', textAlign: 'center' }}>app.lucidmail.io</div>
-          </div>
-          {/* App mockup */}
-          <div style={{ display: 'flex', height: 380 }}>
-            <div style={{ width: 68, background: '#0d0d20', borderRight: '1px solid rgba(255,255,255,.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0', gap: 6 }}>
-              <div style={{ width: 38, height: 38, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', color: 'rgba(255,255,255,.5)', marginBottom: 8 }}>+</div>
-              {['#ea4335','rgba(255,255,255,.2)','rgba(255,255,255,.2)','rgba(255,255,255,.2)'].map((c, i) => (
-                <div key={i} style={{ width: 42, height: 28, borderRadius: 999, background: i === 0 ? 'rgba(26,115,232,.25)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 16, height: 16, borderRadius: 3, background: c }} />
-                </div>
-              ))}
-            </div>
-            <div style={{ flex: 1, background: '#111122', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '.6875rem' }}>SS</div>
-                <div style={{ width: 100, height: 9, borderRadius: 4, background: 'rgba(255,255,255,.12)' }} />
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 16 }}>
-                  {[12, 4, 2].map((n, i) => (
-                    <div key={i} style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '.9375rem', fontWeight: 700, color: i === 0 ? '#4285f4' : 'rgba(255,255,255,.6)' }}>{n}</div>
-                      <div style={{ width: 30, height: 5, borderRadius: 3, background: 'rgba(255,255,255,.08)', margin: '4px auto 0' }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {[1,0,1,0,0,1].map((unread, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.04)', background: i === 1 ? 'rgba(26,115,232,.12)' : 'transparent' }}>
-                  <div style={{ width: 14, height: 14, borderRadius: 3, border: '1.5px solid rgba(255,255,255,.15)' }} />
-                  <div style={{ width: 14, height: 14, color: unread ? '#f59e0b' : 'rgba(255,255,255,.15)', fontSize: 12 }}>★</div>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: ['#7c3aed','#1a73e8','#059669','#d97706','#0891b2','#ef4444'][i] }} />
-                  <div style={{ flex: 1, display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <div style={{ width: 80, height: 8, borderRadius: 3, background: unread ? 'rgba(255,255,255,.8)' : 'rgba(255,255,255,.2)' }} />
-                    <div style={{ flex: 1, height: 8, borderRadius: 3, background: 'rgba(255,255,255,.08)' }} />
-                  </div>
-                  <div style={{ width: 22, height: 7, borderRadius: 3, background: 'rgba(255,255,255,.12)' }} />
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Right column — globe canvas */}
+        <div style={{
+          flex: 1,
+          position: 'relative',
+          minHeight: '100vh',
+        }}>
+          <PostalGlobe />
         </div>
       </section>
 
-      {/* ── Stats (light section — covers canvas) ── */}
+      {/* ── Stats ── */}
       <section style={{ position: 'relative', zIndex: 1, background: 'white', borderTop: '1px solid #e8eaed', borderBottom: '1px solid #e8eaed' }}>
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '48px', display: 'flex', justifyContent: 'space-around', gap: 16, flexWrap: 'wrap' }}>
-          {[['50K+','Active users'],['4.9★','User rating'],['99.9%','Uptime SLA'],['< 0.3s','Load time']].map(([v, l]) => (
+          {[['50K+','Active users'],['4.9','User rating'],['99.9%','Uptime SLA'],['< 0.3s','Load time']].map(([v, l]) => (
             <div key={l} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '2rem', fontWeight: 900, color: '#202124', letterSpacing: '-.02em' }}>{v}</div>
               <div style={{ fontSize: '.875rem', color: '#5f6368', marginTop: 4 }}>{l}</div>
@@ -452,13 +727,15 @@ export function LandingPage({ onLogin }: { onLogin: (name: string) => void }) {
             <p style={{ fontSize: '1rem', color: '#5f6368', maxWidth: 420, margin: '0 auto' }}>Nothing ships without a usability justification. That's the Lucid promise.</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 20 }}>
-            {FEATURES.map(({ icon, title, desc, badge }) => (
+            {FEATURES.map(({ Icon, title, desc, badge }) => (
               <div key={title}
                 style={{ background: 'white', border: '1.5px solid #e8eaed', borderRadius: 20, padding: '28px', transition: 'all 180ms', cursor: 'default' }}
                 onMouseOver={e => { const d = e.currentTarget as HTMLDivElement; d.style.borderColor = '#1a73e8'; d.style.boxShadow = '0 8px 24px rgba(26,115,232,.1)'; d.style.transform = 'translateY(-2px)'; }}
                 onMouseOut={e => { const d = e.currentTarget as HTMLDivElement; d.style.borderColor = '#e8eaed'; d.style.boxShadow = 'none'; d.style.transform = 'none'; }}
               >
-                <div style={{ fontSize: '1.75rem', marginBottom: 14 }}>{icon}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 12, background: '#f0ebe3', color: '#7a5533', marginBottom: 16 }}>
+                  <Icon />
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#202124' }}>{title}</h3>
                   <span style={{ padding: '2px 8px', borderRadius: 999, background: '#e8f0fe', color: '#1a73e8', fontSize: '.6875rem', fontWeight: 700 }}>{badge}</span>
@@ -470,7 +747,7 @@ export function LandingPage({ onLogin }: { onLogin: (name: string) => void }) {
         </div>
       </section>
 
-      {/* ── Testimonials (dark — stars visible) ── */}
+      {/* ── Testimonials (dark) ── */}
       <section style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(135deg, #050510 0%, #0a0820 100%)', padding: '96px 48px', borderTop: '1px solid rgba(255,255,255,.06)' }}>
         <div style={{ maxWidth: 1060, margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: '2rem', fontWeight: 800, color: 'white', margin: '0 0 60px', letterSpacing: '-.03em' }}>
@@ -502,7 +779,7 @@ export function LandingPage({ onLogin }: { onLogin: (name: string) => void }) {
           style={{ padding: '18px 52px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #1e2d70, #6b21a8)', color: 'white', fontSize: '1.0625rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 8px 28px rgba(30,45,112,.35)', transition: 'all 160ms' }}
           onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(30,45,112,.4)'; }}
           onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(30,45,112,.35)'; }}
-        >Get started free →</button>
+        >Get started free</button>
         <p style={{ fontSize: '.8125rem', color: '#9aa0a6', marginTop: 16 }}>Free forever · No credit card · Cancel anytime</p>
       </section>
 
@@ -517,14 +794,14 @@ export function LandingPage({ onLogin }: { onLogin: (name: string) => void }) {
             >{l}</a>
           ))}
         </div>
-        <p style={{ margin: 0, fontSize: '.8125rem', color: 'rgba(255,255,255,.25)' }}>© 2026 Lucid Mail · Built with HCI ♡</p>
+        <p style={{ margin: 0, fontSize: '.8125rem', color: 'rgba(255,255,255,.25)' }}>© 2026 Lucid Mail · Built with HCI</p>
       </footer>
 
       {showLogin && <LoginModal onSuccess={name => { setShowLogin(false); onLogin(name); }} onClose={() => setShowLogin(false)} />}
 
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-        @keyframes spin  { to{transform:rotate(360deg)} }
+        @keyframes pulse    { 0%,100%{opacity:1}  50%{opacity:.3}  }
+        @keyframes spin     { to{transform:rotate(360deg)}          }
         @keyframes loginPop { from{opacity:0;transform:scale(.96) translateY(10px)} to{opacity:1;transform:none} }
       `}</style>
     </div>

@@ -1,6 +1,7 @@
 // HCI: S2 Enable Shortcuts — all keyboard shortcuts visible and learnable
 // HCI: N6 Recognition over Recall — shortcuts displayed, not memorised
 // HCI: P2 Von Restorff — shortcut keys visually distinct (chip style)
+// HCI: N7 Flexibility — "Edit shortcuts" link surfaces the customisation path
 import React from 'react';
 import { useUiStore } from '../../stores/uiStore';
 import { IconClose } from './Icons';
@@ -54,7 +55,11 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
   },
 ];
 
-export function KeyboardShortcutsOverlay() {
+interface KeyboardShortcutsOverlayProps {
+  onEditShortcuts?: () => void;
+}
+
+export function KeyboardShortcutsOverlay({ onEditShortcuts }: KeyboardShortcutsOverlayProps) {
   const { keyboardShortcutsVisible, setKeyboardShortcutsVisible } = useUiStore();
   if (!keyboardShortcutsVisible) return null;
 
@@ -66,9 +71,14 @@ export function KeyboardShortcutsOverlay() {
     >
       <div className="shortcut-dialog fade-up" role="dialog" aria-label="Keyboard shortcuts" aria-modal="true">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-          <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-            Keyboard shortcuts
-          </h2>
+          <div>
+            <h2 style={{ margin: '0 0 2px', fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Keyboard shortcuts
+            </h2>
+            <p style={{ margin: 0, fontSize: '.75rem', color: 'var(--text-muted)' }}>
+              All shortcuts can be customised in Settings
+            </p>
+          </div>
           <button
             className="icon-btn"
             onClick={() => setKeyboardShortcutsVisible(false)}
@@ -102,7 +112,31 @@ export function KeyboardShortcutsOverlay() {
         </div>
 
         <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>Press <span className="shortcut-key">Esc</span> to close</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>
+              Press <span className="shortcut-key">Esc</span> to close
+            </span>
+            {onEditShortcuts && (
+              <button
+                onClick={() => { setKeyboardShortcutsVisible(false); onEditShortcuts(); }}
+                style={{
+                  fontSize: '.75rem', fontWeight: 600,
+                  color: 'var(--brand-500)',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  padding: '4px 10px', borderRadius: 'var(--radius-sm)',
+                  transition: 'background 120ms',
+                  display: 'flex', alignItems: 'center', gap: 5,
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'var(--brand-50)'}
+                onMouseOut={e => e.currentTarget.style.background = 'none'}
+              >
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M13.5 3.5l3 3L7 16H4v-3L13.5 3.5z" />
+                </svg>
+                Edit shortcuts
+              </button>
+            )}
+          </div>
           <button className="btn btn-ghost" onClick={() => setKeyboardShortcutsVisible(false)} style={{ fontSize: '.8125rem' }}>
             Close
           </button>

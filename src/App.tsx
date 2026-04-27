@@ -39,6 +39,11 @@ function MainApp() {
     if (path === '/inbox')    { setSelectedEmail(null); setPreviewEmailId(null); setView('inbox'); }
   };
 
+  const handleEditShortcuts = () => {
+    setSettingsTab('shortcuts');
+    setView('settings');
+  };
+
   const handleEmailSelect = (id: string) => {
     if (previewEmailId === id) return;
     setPreviewEmailId(id);
@@ -78,7 +83,7 @@ function MainApp() {
         </div>
         <ToastContainer />
         <ConfirmDialog />
-        <KeyboardShortcutsOverlay />
+        <KeyboardShortcutsOverlay onEditShortcuts={handleEditShortcuts} />
       </div>
     );
   }
@@ -122,7 +127,7 @@ function MainApp() {
       <Chat />
       <ToastContainer />
       <ConfirmDialog />
-      <KeyboardShortcutsOverlay />
+      <KeyboardShortcutsOverlay onEditShortcuts={handleEditShortcuts} />
     </div>
   );
 }
