@@ -182,6 +182,7 @@ const TABS: TabDef[] = [
   { id: 'tags',          label: 'Tags',          Icon: IconTagS    },
   { id: 'accounts',      label: 'Accounts',      Icon: IconUser    },
   { id: 'signature',     label: 'Signature',     Icon: IconPen     },
+  { id: 'help',          label: 'Help & Docs',   Icon: IconHelp    },
 ];
 
 const SHORTCUT_CATEGORIES = [...new Set(SHORTCUT_DEFS.map(s => s.category))];
@@ -552,6 +553,342 @@ const sectionDesc: React.CSSProperties = {
   margin: 0, fontSize: '.875rem', color: 'var(--text-muted)', lineHeight: 1.55,
 };
 
+// ── Help & Docs tab ─────────────────────────────────────────────
+
+interface DocSection {
+  id: string;
+  icon: React.ReactNode;
+  title: string;
+  content: React.ReactNode;
+}
+
+function CodeKey({ k }: { k: string }) {
+  return (
+    <kbd style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 22, padding: '1px 6px', background: 'var(--gray-100)', border: '1px solid var(--border)', borderRadius: 4, fontSize: '.75rem', fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+      {k}
+    </kbd>
+  );
+}
+
+function DocBlock({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <h4 style={{ margin: '0 0 12px', fontSize: '.9375rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-.01em' }}>{title}</h4>
+      {children}
+    </div>
+  );
+}
+
+function Tip({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', gap: 10, padding: '10px 14px', background: 'var(--brand-50)', border: '1px solid var(--brand-100)', borderRadius: 'var(--radius-md)', marginTop: 8 }}>
+      <span style={{ fontSize: '.875rem', color: 'var(--brand-500)', flexShrink: 0 }}>✦</span>
+      <p style={{ margin: 0, fontSize: '.8125rem', color: 'var(--brand-700)', lineHeight: 1.6 }}>{children}</p>
+    </div>
+  );
+}
+
+function ShortcutRow({ keys, desc }: { keys: string[]; desc: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+      <span style={{ fontSize: '.875rem', color: 'var(--text-secondary)' }}>{desc}</span>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {keys.map((k, i) => <CodeKey key={i} k={k} />)}
+      </div>
+    </div>
+  );
+}
+
+function HelpTab() {
+  const [activeSection, setActiveSection] = useState('getting-started');
+
+  const NAV = [
+    { id: 'getting-started', label: 'Getting started' },
+    { id: 'navigation',      label: 'Navigation' },
+    { id: 'email-actions',   label: 'Email actions' },
+    { id: 'compose',         label: 'Compose & send' },
+    { id: 'labels',          label: 'Labels & search' },
+    { id: 'shortcuts',       label: 'Keyboard shortcuts' },
+    { id: 'faq',             label: 'FAQ' },
+  ];
+
+  return (
+    <div style={{ display: 'flex', gap: 0, minHeight: 0, height: '100%' }}>
+
+      {/* Left mini-nav */}
+      <nav style={{ width: 168, flexShrink: 0, paddingRight: 24, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <p style={{ margin: '0 0 10px', fontSize: '.6875rem', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Contents</p>
+        {NAV.map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setActiveSection(id)}
+            style={{
+              textAlign: 'left', border: 'none', cursor: 'pointer', padding: '7px 10px',
+              borderRadius: 'var(--radius-sm)', fontSize: '.8125rem',
+              background: activeSection === id ? 'var(--brand-50)' : 'transparent',
+              color: activeSection === id ? 'var(--brand-600)' : 'var(--text-secondary)',
+              fontWeight: activeSection === id ? 600 : 400,
+              transition: 'all 100ms',
+            }}
+            onMouseOver={e => { if (activeSection !== id) e.currentTarget.style.background = 'var(--gray-100)'; }}
+            onMouseOut={e => { if (activeSection !== id) e.currentTarget.style.background = 'transparent'; }}
+          >{label}</button>
+        ))}
+      </nav>
+
+      {/* Main content */}
+      <div style={{ flex: 1, paddingLeft: 36, overflowY: 'auto', minHeight: 0 }}>
+
+        {activeSection === 'getting-started' && (
+          <>
+            <h3 style={{ ...sectionTitle, marginBottom: 6 }}>Getting started with Lucid</h3>
+            <p style={{ ...sectionDesc, marginBottom: 28 }}>Lucid is designed to feel instantly familiar if you have used Gmail — and meaningfully better once you explore it.</p>
+
+            <DocBlock title="Signing in">
+              <p style={{ margin: '0 0 10px', fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Use email and password, continue with Google, or continue with GitHub from the login screen. You can also try a zero-friction <strong>Guest demo</strong> with no sign-up required.
+              </p>
+              <Tip>If you use the demo mode, your changes are not persisted between sessions.</Tip>
+            </DocBlock>
+
+            <DocBlock title="The layout at a glance">
+              <p style={{ margin: '0 0 12px', fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Lucid uses the same three-column layout as Gmail:
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[
+                  ['Left column', 'Sidebar with labels (Inbox, Sent, Drafts, Trash, and custom tags). Drag the resize handle to make it wider or narrower.'],
+                  ['Middle column', 'Email list — sorted newest-first. Click any row to preview it in the panel to the right.'],
+                  ['Right panel', 'Email detail view — shows the full message, reply box, and smart replies. Click "⤡" to open in full view.'],
+                ].map(([col, desc]) => (
+                  <div key={col} style={{ display: 'flex', gap: 12, padding: '10px 12px', background: 'var(--gray-25)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--brand-500)', minWidth: 100, paddingTop: 1 }}>{col}</span>
+                    <span style={{ fontSize: '.8125rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{desc}</span>
+                  </div>
+                ))}
+              </div>
+            </DocBlock>
+
+            <DocBlock title="Your first actions">
+              <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  ['Press C', 'to open a compose window'],
+                  ['Press /', 'to search your inbox'],
+                  ['Press ?', 'to open this help panel at any time'],
+                  ['Click an email', 'to preview it without losing your place in the list'],
+                  ['Press E', 'to archive the selected email — press Z to undo'],
+                ].map(([key, desc]) => (
+                  <li key={key} style={{ fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    <CodeKey k={key} /> {desc}
+                  </li>
+                ))}
+              </ol>
+            </DocBlock>
+          </>
+        )}
+
+        {activeSection === 'navigation' && (
+          <>
+            <h3 style={{ ...sectionTitle, marginBottom: 6 }}>Navigation</h3>
+            <p style={{ ...sectionDesc, marginBottom: 28 }}>Move around Lucid without touching the mouse using two-key navigation shortcuts.</p>
+
+            <DocBlock title="Folder shortcuts">
+              <ShortcutRow keys={['G', 'I']} desc="Go to Inbox" />
+              <ShortcutRow keys={['G', 'S']} desc="Go to Sent" />
+              <ShortcutRow keys={['G', 'D']} desc="Go to Drafts" />
+              <ShortcutRow keys={['G', 'A']} desc="Go to All Mail" />
+              <ShortcutRow keys={['G', 'T']} desc="Go to Trash" />
+              <Tip>Press G then the letter key within 1 second. The G key arms navigation mode — you'll see the sidebar highlight.</Tip>
+            </DocBlock>
+
+            <DocBlock title="Search">
+              <p style={{ margin: '0 0 10px', fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Press <CodeKey k="/" /> anywhere to jump to the search bar. Lucid searches subject, sender name, and email body simultaneously. Press <CodeKey k="Esc" /> to clear and return to the inbox.
+              </p>
+              <Tip>Prefix your query with <CodeKey k="from:" /> or <CodeKey k="to:" /> to filter by sender or recipient.</Tip>
+            </DocBlock>
+
+            <DocBlock title="Sidebar">
+              <p style={{ margin: 0, fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Click any label in the sidebar to filter your email list to that folder. Drag the resize handle on the right edge of the sidebar to set your preferred width — it snaps to compact icon-only mode when collapsed below 80 px.
+              </p>
+            </DocBlock>
+          </>
+        )}
+
+        {activeSection === 'email-actions' && (
+          <>
+            <h3 style={{ ...sectionTitle, marginBottom: 6 }}>Email actions</h3>
+            <p style={{ ...sectionDesc, marginBottom: 28 }}>All destructive actions in Lucid are reversible. Press Z to undo any action at any time.</p>
+
+            <DocBlock title="Single email actions">
+              <ShortcutRow keys={['E']}       desc="Archive (removes from Inbox, keeps in All Mail)" />
+              <ShortcutRow keys={['#']}       desc="Delete (moves to Trash)" />
+              <ShortcutRow keys={['S']}       desc="Star / unstar" />
+              <ShortcutRow keys={['Shift','U']} desc="Mark as unread" />
+              <ShortcutRow keys={['Shift','I']} desc="Mark as read" />
+              <ShortcutRow keys={['R']}       desc="Reply" />
+              <ShortcutRow keys={['A']}       desc="Reply all" />
+              <ShortcutRow keys={['F']}       desc="Forward" />
+              <ShortcutRow keys={['Z']}       desc="Undo the last action" />
+            </DocBlock>
+
+            <DocBlock title="Bulk actions">
+              <p style={{ margin: '0 0 10px', fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Tick the checkbox on any email row to enter bulk-select mode. A bulk action bar appears at the top with Archive, Delete, Mark read/unread, and Label options.
+              </p>
+              <ShortcutRow keys={['*','A']} desc="Select all visible emails" />
+              <ShortcutRow keys={['*','N']} desc="Deselect all" />
+              <ShortcutRow keys={['*','U']} desc="Select all unread" />
+              <ShortcutRow keys={['*','S']} desc="Select all starred" />
+              <Tip>Clicking the checkbox in the column header also selects all. Press Esc to exit bulk-select mode.</Tip>
+            </DocBlock>
+
+            <DocBlock title="Archive vs Delete">
+              <div style={{ display: 'flex', gap: 12 }}>
+                {[
+                  { label: 'Archive (E)', color: 'var(--brand-500)', points: ['Moves out of Inbox', 'Always in All Mail', 'Fully searchable', 'Recoverable any time'] },
+                  { label: 'Delete (#)', color: 'var(--danger)', points: ['Moves to Trash', 'Permanently removed after 30 days', 'Searchable while in Trash', 'Recover before 30 days'] },
+                ].map(col => (
+                  <div key={col.label} style={{ flex: 1, padding: '12px 14px', border: `1.5px solid ${col.color}22`, borderRadius: 'var(--radius-md)', background: `${col.color}08` }}>
+                    <p style={{ margin: '0 0 8px', fontSize: '.8125rem', fontWeight: 700, color: col.color }}>{col.label}</p>
+                    {col.points.map(p => <p key={p} style={{ margin: '0 0 4px', fontSize: '.8rem', color: 'var(--text-secondary)' }}>· {p}</p>)}
+                  </div>
+                ))}
+              </div>
+            </DocBlock>
+          </>
+        )}
+
+        {activeSection === 'compose' && (
+          <>
+            <h3 style={{ ...sectionTitle, marginBottom: 6 }}>Compose & send</h3>
+            <p style={{ ...sectionDesc, marginBottom: 28 }}>Lucid supports multiple compose windows open at the same time, with autosave every 30 seconds.</p>
+
+            <DocBlock title="Opening a compose window">
+              <ShortcutRow keys={['C']} desc="Open a new compose window" />
+              <ShortcutRow keys={['R']} desc="Reply to the currently selected email" />
+              <ShortcutRow keys={['A']} desc="Reply all" />
+              <ShortcutRow keys={['F']} desc="Forward" />
+              <p style={{ margin: '12px 0 0', fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                You can open up to 3 compose windows at once. They stack horizontally from the bottom-right corner. Click the title bar to minimise any window.
+              </p>
+            </DocBlock>
+
+            <DocBlock title="Sending">
+              <ShortcutRow keys={['Ctrl','Enter']} desc="Send email" />
+              <Tip>If the Subject field is empty when you press Send, Lucid will warn you before sending — unlike Gmail, which lets you send with no subject silently.</Tip>
+            </DocBlock>
+
+            <DocBlock title="Drafts & autosave">
+              <p style={{ margin: 0, fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Every compose window autosaves to your Drafts folder every 30 seconds. Closing a compose window without sending also saves the draft. Access drafts from the sidebar or press <CodeKey k="G" /> <CodeKey k="D" />.
+              </p>
+            </DocBlock>
+
+            <DocBlock title="CC & BCC">
+              <p style={{ margin: 0, fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Click the <strong>CC</strong> or <strong>BCC</strong> button in the compose window header to reveal the extra recipient fields. Both fields support autocomplete from your contacts.
+              </p>
+            </DocBlock>
+          </>
+        )}
+
+        {activeSection === 'labels' && (
+          <>
+            <h3 style={{ ...sectionTitle, marginBottom: 6 }}>Labels & search</h3>
+            <p style={{ ...sectionDesc, marginBottom: 28 }}>Labels are Lucid's primary organisation tool — more flexible than folders because one email can have multiple labels.</p>
+
+            <DocBlock title="Creating labels">
+              <p style={{ margin: '0 0 10px', fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Go to <strong>Settings → Tags</strong> to create a new label. Give it a name and choose a colour. The label appears immediately in the sidebar.
+              </p>
+              <Tip>Drag labels in the sidebar to reorder them. Labels you use most often should go at the top — within Fitts' Law reach.</Tip>
+            </DocBlock>
+
+            <DocBlock title="Applying labels">
+              <p style={{ margin: 0, fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Select one or more emails, then click the Label button in the bulk action bar. A label pill appears on the email row for quick visual identification. An email can carry multiple labels.
+              </p>
+            </DocBlock>
+
+            <DocBlock title="Searching">
+              <p style={{ margin: '0 0 10px', fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                Press <CodeKey k="/" /> to open search. Results match subject, sender, recipient, and body. The search bar stays visible at the top while you browse results.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[['from:priya', 'Emails from Priya'], ['to:me', 'Emails addressed to you'], ['subject:invoice', 'Emails with "invoice" in the subject'], ['is:unread', 'All unread emails']].map(([ex, desc]) => (
+                  <div key={ex} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px', background: 'var(--gray-50)', borderRadius: 'var(--radius-sm)' }}>
+                    <code style={{ fontSize: '.8rem', color: 'var(--brand-600)', fontFamily: 'monospace', minWidth: 120 }}>{ex}</code>
+                    <span style={{ fontSize: '.8rem', color: 'var(--text-muted)' }}>{desc}</span>
+                  </div>
+                ))}
+              </div>
+            </DocBlock>
+          </>
+        )}
+
+        {activeSection === 'shortcuts' && (
+          <>
+            <h3 style={{ ...sectionTitle, marginBottom: 6 }}>Keyboard shortcuts</h3>
+            <p style={{ ...sectionDesc, marginBottom: 28 }}>Every action in Lucid has a keyboard shortcut. All shortcuts can be remapped in Settings → Shortcuts.</p>
+
+            {[
+              { group: 'Navigation', rows: [['G I','Go to Inbox'],['G S','Go to Sent'],['G D','Go to Drafts'],['G A','Go to All Mail'],['G T','Go to Trash'],['/','Focus search'],['?','Open this help panel']] },
+              { group: 'Compose',    rows: [['C','New compose window'],['Ctrl Enter','Send'],['R','Reply'],['A','Reply all'],['F','Forward']] },
+              { group: 'Email actions', rows: [['E','Archive'],['#','Delete'],['S','Star/unstar'],['Shift U','Mark unread'],['Shift I','Mark read'],['Z','Undo']] },
+              { group: 'Selection',  rows: [['* A','Select all'],['* N','Deselect all'],['* U','Select unread'],['* S','Select starred']] },
+            ].map(({ group, rows }) => (
+              <DocBlock key={group} title={group}>
+                {rows.map(([keys, desc]) => (
+                  <ShortcutRow key={desc} keys={keys.split(' ')} desc={desc} />
+                ))}
+              </DocBlock>
+            ))}
+
+            <Tip>Shortcuts are disabled when focus is inside a text field (compose, search, reply). Press Esc to leave a text field and re-enable shortcuts.</Tip>
+          </>
+        )}
+
+        {activeSection === 'faq' && (
+          <>
+            <h3 style={{ ...sectionTitle, marginBottom: 6 }}>Frequently asked questions</h3>
+            <p style={{ ...sectionDesc, marginBottom: 28 }}>Answers to the most common questions about Lucid Mail.</p>
+
+            {[
+              ['How is Lucid different from Gmail?', 'Lucid uses the same three-column layout and familiar keyboard shortcuts as Gmail, but every feature is grounded in 40 years of HCI research. Resizable panels, undo for every destructive action, skeleton loading instead of blank spinners, an onboarding tutorial that reduces cognitive load for new users — these are deliberate choices, not coincidences. Complexity is moved from your mental model to our implementation.'],
+              ['Is my real Gmail connected?', 'No. Lucid Mail is a research prototype demonstrating applied HCI principles. All email data shown is simulated — no real emails are sent or received, and no Google account data is accessed.'],
+              ['How do I switch between light and dark mode?', 'Go to Settings → Appearance and toggle the Theme option. The change applies instantly — no page reload. Your preference is saved locally and restored on your next visit.'],
+              ['Can I remap keyboard shortcuts?', 'Yes — open Settings → Shortcuts. Click the key badge next to any action and press the new key. Changes apply immediately. Press Reset to restore all defaults.'],
+              ['Why does the app show a loading animation when I sign in?', 'The login loading screen (the LUCID wordmark filling with colour) and the skeleton layout are deliberate HCI design patterns. They give proportional, informative feedback during loading rather than showing a static spinner, which reduces perceived wait time by 20–30% according to usability research.'],
+              ['What happens if I accidentally delete an email?', 'Press Z immediately after any action to undo it. Unlike Gmail\'s 30-second undo-send limit, Lucid lets you reverse any action — archive, delete, label, mark-read — at any time during your session.'],
+              ['How do I give feedback or report a bug?', 'Open the GitHub repository for Lucid Mail and create an issue. Include steps to reproduce, your browser, and a screenshot if possible.'],
+              ['Are there mobile or desktop app versions?', 'Lucid Mail is currently a web application. Native iOS, Android, and desktop (Electron) apps are on the roadmap for the next milestone.'],
+            ].map(([q, a]) => (
+              <div key={q as string} style={{ marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+                <p style={{ margin: '0 0 8px', fontSize: '.9375rem', fontWeight: 600, color: 'var(--text-primary)' }}>{q}</p>
+                <p style={{ margin: 0, fontSize: '.875rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>{a}</p>
+              </div>
+            ))}
+          </>
+        )}
+
+        <div style={{ height: 40 }} />
+      </div>
+    </div>
+  );
+}
+
+function IconHelp({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="10" cy="10" r="8" />
+      <path d="M7.5 7.5a2.5 2.5 0 014.5 1.5c0 1.5-2 2-2 3" />
+      <circle cx="10" cy="14.5" r=".75" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 interface SettingsProps {
   onBack: () => void;
   initialTab?: string;
@@ -599,13 +936,14 @@ export function Settings({ onBack, initialTab }: SettingsProps) {
           })}
         </nav>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '40px 48px', maxWidth: 760 }}>
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: activeTab === 'help' ? '32px 40px' : '40px 48px', maxWidth: activeTab === 'help' ? 'none' : 760 }}>
           {activeTab === 'appearance'    && <AppearanceTab pref={pref} setPreference={setPreference} />}
           {activeTab === 'notifications' && <NotificationsTab />}
           {activeTab === 'shortcuts'     && <ShortcutsTab pref={pref} setPreference={setPreference} resetShortcuts={resetShortcuts} />}
           {activeTab === 'tags'          && <TagsTab />}
           {activeTab === 'accounts'      && <AccountsTab accounts={accounts} signOutAccount={signOutAccount} />}
           {activeTab === 'signature'     && <SignatureTab />}
+          {activeTab === 'help'          && <HelpTab />}
           <div style={{ height: 60 }} />
         </div>
       </div>

@@ -54,6 +54,11 @@ function MainApp({ showOnboarding, onOnboardingDone }: { showOnboarding: boolean
     setView('settings');
   };
 
+  const handleOpenHelp = () => {
+    setSettingsTab('help');
+    setView('settings');
+  };
+
   const handleEmailSelect = (id: string) => {
     if (previewEmailId === id) return;
     setPreviewEmailId(id);
@@ -104,7 +109,7 @@ function MainApp({ showOnboarding, onOnboardingDone }: { showOnboarding: boolean
           </div>
           <ToastContainer />
           <ConfirmDialog />
-          <KeyboardShortcutsOverlay onEditShortcuts={handleEditShortcuts} />
+          <KeyboardShortcutsOverlay onEditShortcuts={handleEditShortcuts} onOpenHelp={handleOpenHelp} />
         </div>
         {showOnboarding && <OnboardingTutorial onClose={onOnboardingDone} />}
       </>
