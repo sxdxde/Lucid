@@ -55,7 +55,7 @@ const DEFAULT_SHORTCUTS: Record<string, string> = {
 export const useUiStore = create<UiStore>()(
   persist(
     (set, get) => ({
-      sidebarExpanded: false,
+      sidebarExpanded: true,
       composeOpen: false,
       composeWindows: [],
       activeView: 'list',
@@ -149,7 +149,7 @@ export const useUiStore = create<UiStore>()(
       },
     }),
     {
-      name: 'lucidmail-ui',
+      name: 'lucidmail-ui-v3',
       partialize: (state) => ({
         userPreferences: state.userPreferences,
         sidebarExpanded: state.sidebarExpanded,

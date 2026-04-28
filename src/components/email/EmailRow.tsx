@@ -253,7 +253,7 @@ export function EmailRow({ email, isSelected, isChecked, isPreview, onSelect, on
   const handleToggleRead = (e: React.MouseEvent) => { e.stopPropagation(); markRead([email.id], !email.isRead); };
   const handleStar       = (e: React.MouseEvent) => { e.stopPropagation(); toggleStar(email.id); };
 
-  const userLabels = email.labels.filter(l => !['inbox','sent','drafts','spam','trash','allmail','starred'].includes(l));
+  const userLabels = email.labels.filter(l => !['inbox','sent','drafts','spam','trash','allmail','starred','archived'].includes(l));
   const isUnread = !email.isRead;
   const isSpam = !!email.isSpamDetected;
 

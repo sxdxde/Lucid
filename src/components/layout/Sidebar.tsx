@@ -45,8 +45,8 @@ export function Sidebar({ onLabelSelect }: SidebarProps) {
   const { activeLabel, setActiveLabel, customLabels, getUnreadCount } = useEmailStore();
   const { openCompose, openChat } = useUiStore();
 
-  const [width, setWidth] = useState(COMPACT_W);
-  const [expanded, setExpanded] = useState(false);
+  const [width, setWidth] = useState(EXPANDED_W);
+  const [expanded, setExpanded] = useState(true);
   const isExpanded = width > SNAP_THRESH;
 
   const chatContacts = mockContacts.slice(0, 3);

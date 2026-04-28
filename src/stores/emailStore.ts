@@ -286,9 +286,8 @@ export const useEmailStore = create<EmailStore>()(
       },
     }),
     {
-      name: 'clearmail-emails',
+      name: 'clearmail-v2',
       partialize: (state) => ({
-        emails: state.emails.filter(e => e.labels.includes('drafts')),
         customLabels: state.customLabels,
       }),
     }
