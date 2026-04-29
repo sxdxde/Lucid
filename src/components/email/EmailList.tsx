@@ -90,15 +90,17 @@ interface WelcomeHeaderProps {
   emails: Email[];
   showUnreadOnly: boolean;
   sentTodayFilter: boolean;
+  activeTagFilter: string | null;
   onUnreadClick: () => void;
   onSentClick: () => void;
   onDraftsClick: () => void;
+  onTagClick: (labelId: string) => void;
 }
 
 function WelcomeHeader({
   activeAccount, customLabels, emails,
-  showUnreadOnly, sentTodayFilter,
-  onUnreadClick, onSentClick, onDraftsClick,
+  showUnreadOnly, sentTodayFilter, activeTagFilter,
+  onUnreadClick, onSentClick, onDraftsClick, onTagClick,
 }: WelcomeHeaderProps) {
   // Unread count across inbox (excluding trash)
   const inboxUnreadCount = emails.filter(e => e.labels.includes('inbox') && !e.labels.includes('trash') && !e.isRead).length;
@@ -126,11 +128,31 @@ function WelcomeHeader({
           <p className="welcome-name">Welcome, {firstName}</p>
           {customLabels.length > 0 && (
             <div className="welcome-tags">
-              {customLabels.slice(0, 4).map(l => (
-                <span key={l.id} className="welcome-tag" style={{ background: `${l.color}18`, color: l.color ?? undefined, borderColor: `${l.color}40` }}>
-                  {l.name}
-                </span>
-              ))}
+              {customLabels.slice(0, 4).map(l => {
+                const isActive = activeTagFilter === l.id;
+                return (
+                  <button
+                    key={l.id}
+                    className="welcome-tag"
+                    onClick={() => onTagClick(l.id)}
+                    aria-pressed={isActive}
+                    title={isActive ? `Remove "${l.name}" filter` : `Filter by "${l.name}"`}
+                    style={{
+                      background: isActive ? `${l.color}30` : `${l.color}18`,
+                      color: l.color ?? undefined,
+                      borderColor: isActive ? `${l.color}80` : `${l.color}40`,
+                      fontWeight: isActive ? 700 : undefined,
+                      cursor: 'pointer',
+                      border: `1.5px solid`,
+                      fontFamily: 'inherit',
+                      outline: 'none',
+                    }}
+                  >
+                    {isActive && <span style={{ marginRight: 4, fontSize: '.75em' }}>✕</span>}
+                    {l.name}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -211,6 +233,7 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
   // HCI: N3 User Control & Freedom — escape hatch is always one click away
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [sentTodayFilter, setSentTodayFilter] = useState(false);
+  const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
 
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
@@ -234,8 +257,13 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
       list = list.filter(e => new Date(e.timestamp).toDateString() === today);
     }
 
+    // Tag quick-filter — only applied in inbox view
+    if (activeTagFilter && activeLabel === 'inbox') {
+      list = list.filter(e => e.labels.includes(activeTagFilter));
+    }
+
     return list;
-  }, [emails, activeLabel, searchQuery, searchResults, activeAccount?.id, showUnreadOnly, sentTodayFilter]);
+  }, [emails, activeLabel, searchQuery, searchResults, activeAccount?.id, showUnreadOnly, sentTodayFilter, activeTagFilter]);
 
   // ── Reload handler (must be after displayedEmails to avoid TDZ) ──────────
   // HCI: S3 Informative Feedback — "Checking for new mail…" toast fires immediately
@@ -307,6 +335,11 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
     setShowUnreadOnly(false);
   };
 
+  const handleTagClick = (labelId: string) => {
+    setActiveTagFilter(prev => (prev === labelId ? null : labelId));
+    setShowUnreadOnly(false);
+  };
+
   // Reset stat filters when user navigates away via the sidebar
   // (activeLabel changes externally — filters no longer make sense)
   const prevLabelRef = useRef(activeLabel);
@@ -316,16 +349,21 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
     if (activeLabel !== 'sent' && sentTodayFilter) setSentTodayFilter(false);
     // Reset unread filter when leaving inbox
     if (activeLabel !== 'inbox' && showUnreadOnly) setShowUnreadOnly(false);
+    // Reset tag filter when leaving inbox
+    if (activeLabel !== 'inbox' && activeTagFilter) setActiveTagFilter(null);
   }
 
   const LABEL_TITLES: Record<string, string> = {
     inbox: 'Inbox', starred: 'Starred', sent: 'Sent', drafts: 'Drafts',
     spam: 'Spam', trash: 'Trash', allmail: 'All Mail', archived: 'Archive',
   };
+  const activeTagLabel = activeTagFilter ? customLabels.find(l => l.id === activeTagFilter) : null;
   const labelTitle = searchQuery
     ? `Search: "${searchQuery}"`
     : showUnreadOnly && activeLabel === 'inbox'
     ? 'Inbox — Unread'
+    : activeTagFilter && activeLabel === 'inbox' && activeTagLabel
+    ? `Inbox — ${activeTagLabel.name}`
     : sentTodayFilter && activeLabel === 'sent'
     ? 'Sent · Today'
     : LABEL_TITLES[activeLabel] ?? (activeLabel.charAt(0).toUpperCase() + activeLabel.slice(1));
@@ -343,9 +381,11 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
           emails={emails}
           showUnreadOnly={showUnreadOnly}
           sentTodayFilter={sentTodayFilter}
+          activeTagFilter={activeTagFilter}
           onUnreadClick={handleUnreadClick}
           onSentClick={handleSentClick}
           onDraftsClick={handleDraftsClick}
+          onTagClick={handleTagClick}
         />
       )}
 
@@ -406,6 +446,24 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
             }}
           >
             Today only
+            <IconClose className="w-3 h-3" />
+          </button>
+        )}
+        {activeTagFilter && activeLabel === 'inbox' && activeTagLabel && (
+          <button
+            onClick={() => setActiveTagFilter(null)}
+            aria-label={`Clear "${activeTagLabel.name}" filter`}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '3px 10px', marginLeft: 8,
+              background: `${activeTagLabel.color}18`,
+              border: `1px solid ${activeTagLabel.color}50`,
+              borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+              fontSize: '.6875rem', fontWeight: 600, color: activeTagLabel.color ?? 'var(--text-primary)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {activeTagLabel.name}
             <IconClose className="w-3 h-3" />
           </button>
         )}
