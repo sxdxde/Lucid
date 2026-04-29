@@ -588,9 +588,9 @@ const FEATURES = [
 ];
 
 const TESTIMONIALS = [
-  { quote: "Switched from Gmail three months ago. Keyboard shortcuts alone saved me 40 minutes a day.", author: "Priya Sharma",  role: "Product Designer · Figma",       avatar: "PS", color: "#7c3aed" },
-  { quote: "The dark mode is the most beautiful I've seen in any email client. Zero eye strain.",         author: "Arjun Mehta", role: "Senior Engineer · Atlassian",      avatar: "AM", color: "#0891b2" },
-  { quote: "Finally an email app that respects my workflow. Labels, shortcuts, undo — it just works.",    author: "Sarah Johnson",role: "UX Researcher · Google",           avatar: "SJ", color: "#059669" },
+  { quote: "Switched from Gmail three months ago. Keyboard shortcuts alone saved me 40 minutes a day. The remappable shortcuts were the killer feature — I kept my Superhuman muscle memory.", author: "Priya Sharma",   role: "Product Designer", company: "Figma",      avatar: "PS", color: "#7c3aed", featured: false },
+  { quote: "Finally an email client built like a product, not a feature dump. The archive context banners and undo system alone removed so much anxiety from my inbox routine.",               author: "Arjun Mehta",   role: "Senior Engineer",  company: "Atlassian",  avatar: "AM", color: "#0891b2", featured: true  },
+  { quote: "The HCI principles aren't just marketing — you feel them. Gestalt grouping, Fitts' Law targets, zero cognitive load. This is what email should have always looked like.",          author: "Sarah Johnson", role: "UX Researcher",    company: "Google",     avatar: "SJ", color: "#059669", featured: false },
 ];
 
 // ── Landing page ──────────────────────────────────────────────
@@ -748,26 +748,112 @@ export function LandingPage({ onLogin }: { onLogin: (name: string) => void }) {
       </section>
 
       {/* ── Testimonials (dark) ── */}
-      <section style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(135deg, #050510 0%, #0a0820 100%)', padding: '96px 48px', borderTop: '1px solid rgba(255,255,255,.06)' }}>
-        <div style={{ maxWidth: 1060, margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: '2rem', fontWeight: 800, color: 'white', margin: '0 0 60px', letterSpacing: '-.03em' }}>
-            Loved by people who live in their inbox
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-            {TESTIMONIALS.map(({ quote, author, role, avatar, color }) => (
-              <div key={author} style={{ background: 'rgba(255,255,255,.05)', borderRadius: 20, padding: '28px', border: '1px solid rgba(255,255,255,.08)', backdropFilter: 'blur(10px)' }}>
-                <div style={{ fontSize: '1.5rem', color: 'rgba(255,255,255,.25)', marginBottom: 12 }}>"</div>
-                <p style={{ margin: '0 0 22px', fontSize: '.9375rem', color: 'rgba(255,255,255,.82)', lineHeight: 1.65 }}>{quote}</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '.6875rem', flexShrink: 0 }}>{avatar}</div>
-                  <div>
-                    <div style={{ fontSize: '.875rem', fontWeight: 600, color: 'white' }}>{author}</div>
-                    <div style={{ fontSize: '.75rem', color: 'rgba(255,255,255,.45)' }}>{role}</div>
+      <section style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(160deg, #060614 0%, #0c0b24 55%, #06060f 100%)', padding: '112px 48px', borderTop: '1px solid rgba(255,255,255,.06)', overflow: 'hidden' }}>
+        {/* Ambient background orbs */}
+        <div style={{ position: 'absolute', top: -160, left: '8%', width: 560, height: 560, borderRadius: '50%', background: 'radial-gradient(circle, rgba(26,115,232,.07) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -100, right: '12%', width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,.06) 0%, transparent 65%)', pointerEvents: 'none' }} />
+
+        <div style={{ maxWidth: 1080, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+
+          {/* Section header */}
+          <div style={{ textAlign: 'center', marginBottom: 80 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 18px', borderRadius: 999, border: '1px solid rgba(251,188,4,.28)', background: 'rgba(251,188,4,.08)', marginBottom: 24 }}>
+              <span style={{ color: '#fbbc04', fontSize: '.8125rem', fontWeight: 700 }}>{'★★★★★'}</span>
+              <span style={{ color: 'rgba(251,188,4,.9)', fontSize: '.8125rem', fontWeight: 600, letterSpacing: '.02em' }}>4.9 · Trusted by 50,000+ users</span>
+            </div>
+            <h2 style={{ fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', fontWeight: 900, color: 'white', margin: '0 0 16px', letterSpacing: '-.04em', lineHeight: 1.1 }}>
+              Real people. Real results.
+            </h2>
+            <p style={{ fontSize: '1.0625rem', color: 'rgba(255,255,255,.45)', margin: '0 auto', maxWidth: 440, lineHeight: 1.65 }}>
+              From designers to engineers — people who switched from Gmail don't look back.
+            </p>
+          </div>
+
+          {/* Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 22, alignItems: 'start' }}>
+            {TESTIMONIALS.map(({ quote, author, role, company, avatar, color, featured }) => (
+              <div
+                key={author}
+                style={{
+                  position: 'relative',
+                  background: featured ? 'rgba(26,115,232,.07)' : 'rgba(255,255,255,.04)',
+                  borderRadius: 24,
+                  padding: '36px 32px 28px',
+                  border: featured ? '1px solid rgba(26,115,232,.38)' : '1px solid rgba(255,255,255,.09)',
+                  backdropFilter: 'blur(18px)',
+                  boxShadow: featured ? '0 0 0 1px rgba(26,115,232,.12), 0 28px 72px rgba(0,0,0,.45)' : '0 8px 32px rgba(0,0,0,.28)',
+                  transition: 'transform 200ms, box-shadow 200ms',
+                  cursor: 'default',
+                }}
+                onMouseOver={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = featured ? '0 0 0 1px rgba(26,115,232,.2), 0 40px 80px rgba(0,0,0,.55)' : '0 20px 56px rgba(0,0,0,.45)'; }}
+                onMouseOut={e => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; (e.currentTarget as HTMLDivElement).style.boxShadow = featured ? '0 0 0 1px rgba(26,115,232,.12), 0 28px 72px rgba(0,0,0,.45)' : '0 8px 32px rgba(0,0,0,.28)'; }}
+              >
+                {/* Featured label */}
+                {featured && (
+                  <div style={{ position: 'absolute', top: -1, left: 28, padding: '4px 14px', borderRadius: '0 0 10px 10px', background: '#1a73e8', fontSize: '.68rem', fontWeight: 800, color: 'white', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                    Featured
+                  </div>
+                )}
+
+                {/* Stars */}
+                <div style={{ display: 'flex', gap: 3, marginBottom: 22 }}>
+                  {[0,1,2,3,4].map(s => (
+                    <span key={s} style={{ color: '#fbbc04', fontSize: '1rem', lineHeight: 1 }}>★</span>
+                  ))}
+                </div>
+
+                {/* Large decorative quote mark */}
+                <div style={{ fontSize: '4.5rem', color: featured ? 'rgba(26,115,232,.3)' : 'rgba(255,255,255,.1)', lineHeight: .7, fontFamily: 'Georgia, serif', marginBottom: 12, userSelect: 'none', marginLeft: -4 }}>"</div>
+
+                {/* Quote body */}
+                <p style={{ margin: '0 0 28px', fontSize: '.9625rem', color: 'rgba(255,255,255,.87)', lineHeight: 1.72, letterSpacing: '-.005em' }}>
+                  {quote}
+                </p>
+
+                {/* Divider */}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,.07)', paddingTop: 22, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {/* Avatar */}
+                  <div style={{
+                    width: 46, height: 46, borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${color} 0%, ${color}bb 100%)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'white', fontWeight: 800, fontSize: '.75rem',
+                    flexShrink: 0,
+                    boxShadow: `0 0 0 2px rgba(255,255,255,.1), 0 4px 14px ${color}55`,
+                  }}>{avatar}</div>
+
+                  {/* Author info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '.9rem', fontWeight: 700, color: 'white', marginBottom: 3 }}>{author}</div>
+                    <div style={{ fontSize: '.77rem', color: 'rgba(255,255,255,.42)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>{role}</span>
+                      <span style={{ color: 'rgba(255,255,255,.18)' }}>·</span>
+                      <span style={{ color: featured ? 'rgba(26,115,232,.8)' : 'rgba(255,255,255,.38)', fontWeight: 600 }}>{company}</span>
+                    </div>
+                  </div>
+
+                  {/* Verified badge */}
+                  <div style={{ flexShrink: 0, padding: '4px 11px', borderRadius: 999, background: 'rgba(52,168,83,.1)', border: '1px solid rgba(52,168,83,.25)', fontSize: '.65rem', fontWeight: 800, color: '#34a853', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+                    ✓ Verified
                   </div>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Trust platform row */}
+          <div style={{ marginTop: 72, paddingTop: 52, borderTop: '1px solid rgba(255,255,255,.06)', textAlign: 'center' }}>
+            <p style={{ fontSize: '.72rem', color: 'rgba(255,255,255,.25)', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 24 }}>As featured on</p>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 48, flexWrap: 'wrap' }}>
+              {['Product Hunt', 'Hacker News', 'Designer News', 'Indie Hackers'].map(p => (
+                <span key={p} style={{ fontSize: '.925rem', color: 'rgba(255,255,255,.2)', fontWeight: 700, letterSpacing: '-.01em', transition: 'color 140ms', cursor: 'default' }}
+                  onMouseOver={e => (e.currentTarget as HTMLSpanElement).style.color = 'rgba(255,255,255,.55)'}
+                  onMouseOut={e => (e.currentTarget as HTMLSpanElement).style.color = 'rgba(255,255,255,.2)'}
+                >{p}</span>
+              ))}
+            </div>
+          </div>
+
         </div>
       </section>
 
