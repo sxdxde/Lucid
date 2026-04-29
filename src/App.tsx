@@ -15,6 +15,7 @@ import { OnboardingTutorial, shouldShowOnboarding } from './components/ui/Onboar
 import { AppSkeleton }   from './components/ui/AppSkeleton';
 import { useUiStore }    from './stores/uiStore';
 import { useEmailStore } from './stores/emailStore';
+import { useAccountStore } from './stores/accountStore';
 import { useKeyboard }   from './hooks/useKeyboard';
 import './App.css';
 
@@ -166,11 +167,11 @@ function MainApp({ showOnboarding, onOnboardingDone }: { showOnboarding: boolean
 
 export default function App() {
   const [appView, setAppView]           = useState<AppView>('landing');
-  const [userName, setUserName]         = useState('Sudarshan');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const { updateAccountName } = useAccountStore();
 
   const handleLogin = (name: string) => {
-    setUserName(name);
+    updateAccountName('primary', name || 'User');
     setAppView('loading');
   };
 
