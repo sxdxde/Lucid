@@ -106,6 +106,7 @@
 \renewcommand{\familydefault}{\sfdefault}
 
 % ── Page style ────────────────────────────────────────────────
+\setlength{\headheight}{15pt}
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\textcolor{gray500}{Lucid Mail — HCI Design Report}}
@@ -121,10 +122,10 @@
 \titlespacing*{\chapter}{0pt}{0pt}{20pt}
 
 \titleformat{\section}
-  {\normalfont\Large\bfseries\color{gray800}}
+  {\normalfont\Large\bfseries\color{gray800}\raggedright}
   {\textcolor{brand}{\thesection}}{0.8em}{}
 \titleformat{\subsection}
-  {\normalfont\large\bfseries\color{gray800}}
+  {\normalfont\large\bfseries\color{gray800}\raggedright}
   {\thesubsection}{0.6em}{}
 
 % ── Custom commands ───────────────────────────────────────────
@@ -195,8 +196,34 @@
   \end{tcolorbox}
 
   \vfill
-{\footnotesize\color{white!35!dark} © 2026 · Built with HCI ♡}
 \end{titlepage}
+
+  % ── Course & Team Details ──────────────────────────────────
+  \clearpage
+  \thispagestyle{empty}
+\pagecolor{dark}
+\color{white}
+\vspace*{\fill}
+\begin{center}
+  \begin{tcolorbox}[
+    enhanced, sharp corners,
+    colback=white!5!dark, colframe=white!15!dark,
+    width=0.65\textwidth,
+    left=28pt, right=28pt, top=28pt, bottom=28pt,
+  ]
+    \centering\color{white!80!dark}
+    {\large\bfseries\color{white} Course Details}\\[14pt]
+    {\normalsize\color{white!85!dark} Human Computer Interaction (HCI)}\\[6pt]
+    {\normalsize\color{white!55!dark} CS5015}\\[24pt]
+    {\large\bfseries\color{white} Team Members}\\[14pt]
+    {\normalsize\color{white!85!dark} Sudarshan S}\quad
+    {\normalsize\color{white!45!dark} CS23B2007}\\[10pt]
+    {\normalsize\color{white!85!dark} R Abinav}\quad
+    {\normalsize\color{white!45!dark} ME23B1004}
+  \end{tcolorbox}
+\end{center}
+\vspace*{\fill}
+\clearpage
 \pagecolor{white}
 \color{black}
 
@@ -607,7 +634,7 @@ location unambiguous at all times. The search bar placeholder text includes \tex
 signal the keyboard shortcut, surfacing system capability as status information.
 
 The Compose Window title bar serves as a persistent status strip: it shows the email's
-subject (or ``New message''), a save-status indicator (\texttt{✓ Saved} / \texttt{Saving…}),
+subject (or ``New message''), a save-status indicator (\texttt{\faCheck\ Saved} / \texttt{Saving…}),
 and the window-state buttons. Even when minimised to 48px, the subject is visible — the user
 always knows what message they are working on.
 
@@ -686,7 +713,7 @@ by keyboard focus.
 In the Tags tab, the ``Create tag'' button is the only submission path; pressing Enter
 in the name field triggers the same handler, preventing accidental blank-name tags.
 
-In the zoom widget, the \texttt{−} button is \texttt{disabled} at 70\% and the \texttt{+}
+In the zoom widget, the \texttt{-} button is \texttt{disabled} at 70\% and the \texttt{+}
 button is \texttt{disabled} at 150\%, preventing the interface from ever reaching an
 unreadable state through repeated clicks.
 
@@ -877,7 +904,7 @@ to \texttt{col-resize} on hover — affording horizontal dragging. Every text in
 a 1.5px border that changes colour on focus — affording text entry. The star icon affords
 toggling (filled = active, outline = inactive).
 
-The zoom widget's \texttt{−} and \texttt{+} labels directly signal their arithmetic effects
+The zoom widget's \texttt{-} and \texttt{+} labels directly signal their arithmetic effects
 — minus decreases, plus increases — without requiring any label or documentation.
 
 
@@ -1059,7 +1086,7 @@ The permanent-delete confirmation button in the ConfirmDialog is smaller and bor
 in red — a deliberately smaller, visually less prominent target to reduce accidental
 permanent deletion.
 
-The zoom \texttt{−} and \texttt{+} buttons are 24px squares — small but adjacent to
+The zoom \texttt{-} and \texttt{+} buttons are 24px squares — small but adjacent to
 each other for quick fine-tuning. The spacing between them and the label is minimal,
 reducing the distance users must travel between presses.
 
@@ -1345,9 +1372,9 @@ combinations in the compose editor.
 
 \section{U3 — Simple and Intuitive Use}
 
-\textcolor{red}{\textbf{{The login modal eliminates complexity for first-time users: three tabs (Email, Google,
-GitHub) with clear labels}}, a loading indicator during authentication, and a ``Continue
-as Guest (Demo)'' fallback that requires zero credentials.
+\textcolor{red}{\textbf{The login modal eliminates complexity for first-time users: three tabs (Email, Google,
+GitHub) with clear labels}, a loading indicator during authentication, and a ``Continue
+as Guest (Demo)'' fallback that requires zero credentials.}
 
 Empty states across all folders use plain language: ``Your inbox is empty. When you receive
 mail, it will appear here.'' There are no error codes, no ``null result set'' messages,
@@ -1370,10 +1397,10 @@ have keyboard alternatives.
 
 \section{U5 — Tolerance for Error}
 
-\textcolor{red}{\textbf{{The 30-day Trash window is the primary error-tolerance mechanism}}: accidental deletion is
+\textcolor{red}{\textbf{The 30-day Trash window is the primary error-tolerance mechanism}: accidental deletion is
 recoverable for four weeks. The autosave draft system ensures no compose-window content
 is ever permanently lost. The ``Send anyway'' button on the empty-subject warning respects
-user intent while preventing accidental sends without a subject.
+user intent while preventing accidental sends without a subject.}
 
 \begin{figure}[H]
   \centering
@@ -1399,7 +1426,7 @@ directly implementing this principle for expert users.
 All primary interactive targets meet or exceed the 44$\times$44px Apple Human Interface
 Guidelines minimum. Sidebar navigation items are 40px tall. The Compose button is 38px in
 diameter (compact) or 44px in expanded mode. The Account Pill button is 36px tall. The zoom
-widget's \texttt{−}/\texttt{+} buttons are 24$\times$24px — below the 44px ideal, but
+widget's \texttt{-}/\texttt{+} buttons are 24$\times$24px — below the 44px ideal, but
 grouped together within a larger 80px interactive zone that encompasses both and the label.
 
 % ══════════════════════════════════════════════════════════════
@@ -1613,8 +1640,8 @@ this'' scepticism that new applications must overcome.
 Words and images together produce stronger memory encoding than either alone.
 
 Each feature card on the landing page pairs an emoji icon (visual channel) with a title and
-description (verbal channel): \texttt{⚡ Blazing fast}, \texttt{🌙 Night \& day},
-\texttt{↩️ Undo anything}. This emoji+text pairing is not decorative — it creates a
+description (verbal channel): \texttt{\faBolt\ Blazing fast}, \texttt{\faMoon\ Night \& day},
+\texttt{\faReply\ Undo anything}. This emoji+text pairing is not decorative — it creates a
 dual-coded memory trace: users who forget the title may still remember the lightning bolt.
 
 Smart reply buttons (``Sounds great!'', ``Thanks for letting me know.'') pair an
@@ -1639,7 +1666,7 @@ The landing page deploys all six principles systematically:
   \textbf{Reciprocity} & ``Free forever plan'', ``No credit card required'' — giving value before asking for commitment\\
   \textbf{Authority} & ``Built on 40 years of HCI research'', ``Research-backed'' badge on the HCI-designed card\\
   \textbf{Liking} & Relatable brand voice (``Your inbox deserves better.''), first-name personalisation after login\\
-  \textbf{Social Proof} & ``50,000+ users'', ``4.9★ User rating'', three named testimonials with roles (Figma designer, Atlassian engineer, Google UX researcher)\\
+  \textbf{Social Proof} & ``50,000+ users'', ``4.9\faStar\ User rating'', three named testimonials with roles (Figma designer, Atlassian engineer, Google UX researcher)\\
   \textbf{Scarcity} & ``Early access'' badge with pulsing blue dot — creates time-sensitive membership perception\\
   \textbf{Commitment} & ``Try the demo'' low-commitment entry before account creation; once using the product, users are invested\\
   \bottomrule
@@ -2006,14 +2033,14 @@ S7 (Locus of Control — user controls the tool's behaviour).
 
 \begin{lucidSolutionBox}{Lucid Solution: Resizable Textarea + Fullscreen Mode}
   The Compose Window body uses \texttt{resize: vertical} on the textarea, letting users
-  manually expand the editing area. The Fullscreen toggle (\texttt{⤢}) expands the
+  manually expand the editing area. The Fullscreen toggle (\texttt{\faExpand}) expands the
   compose window to \texttt{position: fixed; inset: 16px} — a large full-viewport editor
   ideal for composing long-form content. Minimise collapses to a 48px title strip to
   free the screen while preserving compose context.
 \end{lucidSolutionBox}
 
 \textbf{Principle citations:} S7 (Locus of Control), U2 (Flexibility in Use),
-N7 (Flexibility and Efficiency), D4 (Mapping — the ⤢ icon signals expansion direction).
+N7 (Flexibility and Efficiency), D4 (Mapping — the \faExpand\ icon signals expansion direction).
 
 \begin{figure}[H]
   \centering
@@ -2057,7 +2084,7 @@ the banner is a visually bounded information region).
 \end{gmailIssueBox}
 
 \begin{lucidSolutionBox}{Lucid Solution: App-Level Zoom Widget + Settings Options}
-  The Top Bar includes a \texttt{−/+} zoom widget that scales the entire UI by setting
+  The Top Bar includes a \texttt{-/+} zoom widget that scales the entire UI by setting
   \texttt{document.documentElement.style.fontSize} proportionally (70\%–150\% of the
   14px base size). Settings → Appearance offers three option cards (85\%, 100\%, 115\%)
   for one-click preset selection. Because the entire application uses relative units
@@ -2181,14 +2208,14 @@ U1 (Equitable Use — dynamic aria-label for screen readers).
   \centering
   \begin{minipage}[t]{0.48\textwidth}
     \centering
-    \includegraphics[width=\linewidth]{images/reload_func_1.png}
+    \includegraphics[width=\linewidth]{reload_func_1.png}
     \caption*{\textit{Phase 1\,\&\,2 --- Spin icon + skeleton rows:}\\
     ``Checking for new mail\ldots'' toast fires immediately;\\ email list replaced by animated skeleton rows (G1, S3).}
   \end{minipage}
   \hfill
   \begin{minipage}[t]{0.48\textwidth}
     \centering
-    \includegraphics[width=\linewidth]{images/reload_func_2.png}
+    \includegraphics[width=\linewidth]{reload_func_2.png}
     \caption*{\textit{Phase 3 --- Closure toast:}\\
     ``Inbox up to date \textperiodcentered\ 17 unread'' \\ confirms the exact outcome (S4, N1).}
   \end{minipage}
@@ -2217,7 +2244,7 @@ U1 (Equitable Use — dynamic aria-label for screen readers).
     \item \textbf{Unread badge} — Shows the current unread count in brand blue.
           Clicking it applies an \textit{unread-only filter} to the inbox without
           navigating away from it. The badge turns blue with a border (N1 Visibility)
-          and the label changes to ``Unread ✕'' to signal the active state.
+          and the label changes to ``Unread \texttimes'' to signal the active state.
           A dismissable chip (``Unread only ×'') appears in the list header as an
           always-visible escape hatch (S7 Locus of Control, N3 User Control).
           Clicking the badge again, clicking the chip, or navigating away all
@@ -2248,7 +2275,7 @@ L7 (Zipf's Least Effort — maximum information with minimum clicks).
   \centering
   \begin{minipage}[t]{0.32\textwidth}
     \centering
-    \includegraphics[width=\linewidth]{images/stat_1.png}
+    \includegraphics[width=\linewidth]{stat_1.png}
     \caption*{\textbf{Unread badge (active)}\\
     Badge highlights blue; list header reads ``Inbox --- Unread'';
     dismissable ``Unread only \texttimes'' chip is the escape hatch (S7, N3, N1).}
@@ -2256,14 +2283,14 @@ L7 (Zipf's Least Effort — maximum information with minimum clicks).
   \hfill
   \begin{minipage}[t]{0.32\textwidth}
     \centering
-    \includegraphics[width=\linewidth]{images/stat_2.png}
+    \includegraphics[width=\linewidth]{stat_2.png}
     \caption*{\textbf{Sent badge --- Today filter}\\
     Navigates to Sent pre-filtered to today; header reads ``Sent \textperiodcentered\ Today (today only)''; ``Today only \texttimes'' chip clears filter (N2, L7).}
   \end{minipage}
   \hfill
   \begin{minipage}[t]{0.32\textwidth}
     \centering
-    \includegraphics[width=\linewidth]{images/stat_3.png}
+    \includegraphics[width=\linewidth]{stat_3.png}
     \caption*{\textbf{Drafts badge}\\
     One click from inbox to Drafts folder; count surfaced without folder navigation (S8, N7).}
   \end{minipage}
@@ -2532,7 +2559,7 @@ distinct loading treatments, each grounded in a specific HCI principle.
 % ── 12.1 ───────────────────────────────────────────────────────
 \section{Login Loading Screen — Animated Wordmark}
 
-\begin{tcolorbox}[principleBox, colframe=principleblue]
+\begin{tcolorbox}[enhanced, breakable, colback=brandlight, colframe=principleblue, left=6pt, right=6pt, top=5pt, bottom=5pt, boxrule=1.2pt, arc=4pt]
   \textbf{Principle anchor:} Shneiderman S3 (Informative Feedback) · Gestalt G1 (Closure)
   · Aesthetic Usability Effect P1
 \end{tcolorbox}
@@ -2571,10 +2598,10 @@ the skeleton or inbox without a jarring cut.
 % ── 12.2 ───────────────────────────────────────────────────────
 \section{Inbox Skeleton — Full-Layout Shimmer}
 
-\begin{tcolorbox}[principleBox, colframe=principlegreen]
+\begin{principleBox}{Principle Anchor}
   \textbf{Principle anchor:} Gestalt G1 (Closure) · Shneiderman S3 (Feedback) ·
   Norman N1 (Visibility of System Status)
-\end{tcolorbox}
+\end{principleBox}
 
 When the main application mounts after login, Lucid renders a pixel-accurate skeleton of
 the complete three-column layout — topbar, sidebar navigation, and a column of twelve email
@@ -2613,10 +2640,10 @@ rows already present in the email list component.
 % ── 12.3 ───────────────────────────────────────────────────────
 \section{Onboarding Tutorial — Blurred Backdrop Popup}
 
-\begin{tcolorbox}[principleBox, colframe=principlered]
+\begin{principleBox}{Principle Anchor}
   \textbf{Principle anchor:} Jakob's Law L8 · Shneiderman S8 (Reduce STM Load) ·
   Cialdini P2 (Liking) · Norman N9 (Help \& Documentation)
-\end{tcolorbox}
+\end{principleBox}
 
 First-time users — identified by the absence of a \texttt{lucid\_onboarded\_v1}
 \texttt{localStorage} key — are presented with a five-slide modal tutorial immediately after
@@ -2735,5 +2762,39 @@ their first email.
         \textit{Assistive Technology}, 10(1), 4--12.
   \item HCI Exam Reference Guide (2026). Course slide compilation.
 \end{itemize}
+
+\section{Useful Links}
+
+\begin{itemize}[leftmargin=*, itemsep=6pt]
+  \item \textbf{Lucid Mail --- GitHub Repository}\\[2pt]
+        \href{https://github.com/sxdxde/Lucid}{\texttt{https://github.com/sxdxde/Lucid}}
+\end{itemize}
+
+  % ── End Course & Team Details ──────────────────────────────
+  \clearpage
+  \thispagestyle{empty}
+\pagecolor{dark}
+\color{white}
+\vspace*{\fill}
+\begin{center}
+  \begin{tcolorbox}[
+    enhanced, sharp corners,
+    colback=white!5!dark, colframe=white!15!dark,
+    width=0.65\textwidth,
+    left=28pt, right=28pt, top=28pt, bottom=28pt,
+  ]
+    \centering\color{white!80!dark}
+    {\large\bfseries\color{white} Course Details}\\[14pt]
+    {\normalsize\color{white!85!dark} Human Computer Interaction (HCI)}\\[6pt]
+    {\normalsize\color{white!55!dark} CS5015}\\[24pt]
+    {\large\bfseries\color{white} Team Members}\\[14pt]
+    {\normalsize\color{white!85!dark} Sudarshan S}\quad
+    {\normalsize\color{white!45!dark} CS23B2007}\\[10pt]
+    {\normalsize\color{white!85!dark} R Abinav}\quad
+    {\normalsize\color{white!45!dark} ME23B1004}
+  \end{tcolorbox}
+\end{center}
+\vspace*{\fill}
+\clearpage
 
 \end{document}
