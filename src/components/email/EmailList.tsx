@@ -81,17 +81,42 @@ function EmptyState({ label, searchQuery }: { label: string; searchQuery: string
   );
 }
 
+// HCI: N1 Visibility of System Status — active filter state reflected in badge colour
+// HCI: S7 Locus of Control — user drives filtering; can always revert
+// HCI: N2 Match Real World — "Sent · Today" mirrors how people mentally bucket sent mail
 interface WelcomeHeaderProps {
   activeAccount: Account;
   customLabels: Label[];
   emails: Email[];
+  showUnreadOnly: boolean;
+  sentTodayFilter: boolean;
+  onUnreadClick: () => void;
+  onSentClick: () => void;
+  onDraftsClick: () => void;
 }
 
-function WelcomeHeader({ activeAccount, customLabels, emails }: WelcomeHeaderProps) {
-  const inboxCount  = emails.filter(e => e.labels.includes('inbox') && !e.isRead).length;
-  const sentCount   = emails.filter(e => e.labels.includes('sent')).length;
+function WelcomeHeader({
+  activeAccount, customLabels, emails,
+  showUnreadOnly, sentTodayFilter,
+  onUnreadClick, onSentClick, onDraftsClick,
+}: WelcomeHeaderProps) {
+  // Unread count across inbox (excluding trash)
+  const inboxUnreadCount = emails.filter(e => e.labels.includes('inbox') && !e.labels.includes('trash') && !e.isRead).length;
+
+  // Sent TODAY only — the badge reflects what clicking it will show
+  // HCI: N2 Match Real World — users think "sent today", not "all sent ever"
+  const today = new Date().toDateString();
+  const sentTodayCount = emails.filter(e => e.labels.includes('sent') && new Date(e.timestamp).toDateString() === today).length;
+
   const draftsCount = emails.filter(e => e.labels.includes('drafts')).length;
   const firstName = activeAccount?.name?.split(' ')[0] ?? 'there';
+
+  const statBase: React.CSSProperties = {
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    padding: '6px 12px', borderRadius: 'var(--radius-md)',
+    cursor: 'pointer', transition: 'background 120ms, transform 80ms',
+    border: '1.5px solid transparent', userSelect: 'none',
+  };
 
   return (
     <div className="welcome-header">
@@ -110,19 +135,54 @@ function WelcomeHeader({ activeAccount, customLabels, emails }: WelcomeHeaderPro
           )}
         </div>
       </div>
+
       <div className="welcome-stats">
-        <div className="welcome-stat">
-          <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-600)' }}>{inboxCount}</span>
-          <span style={{ fontSize: '.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>Unread</span>
-        </div>
-        <div className="welcome-stat">
-          <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--gray-700)' }}>{sentCount}</span>
+        {/* ── Unread badge — toggles unread-only filter in inbox */}
+        <button
+          id="stat-unread-btn"
+          onClick={onUnreadClick}
+          aria-pressed={showUnreadOnly}
+          aria-label={showUnreadOnly ? 'Showing unread only — click to show all' : `Show only unread emails (${inboxUnreadCount})`}
+          title={showUnreadOnly ? 'Showing unread only · Click to clear filter' : 'Filter inbox to unread only'}
+          style={{
+            ...statBase,
+            background: showUnreadOnly ? 'var(--brand-50)' : 'transparent',
+            borderColor: showUnreadOnly ? 'var(--brand-200)' : 'transparent',
+          }}
+        >
+          <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-600)' }}>{inboxUnreadCount}</span>
+          <span style={{ fontSize: '.6875rem', color: showUnreadOnly ? 'var(--brand-600)' : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: showUnreadOnly ? 700 : 400 }}>
+            {showUnreadOnly ? 'Unread ✕' : 'Unread'}
+          </span>
+        </button>
+
+        {/* ── Sent badge — navigates to Sent filtered to today */}
+        <button
+          id="stat-sent-btn"
+          onClick={onSentClick}
+          aria-label={`Show today's sent emails (${sentTodayCount})`}
+          title="Today's sent emails"
+          style={{
+            ...statBase,
+            background: sentTodayFilter ? 'var(--gray-100)' : 'transparent',
+            borderColor: sentTodayFilter ? 'var(--gray-300)' : 'transparent',
+          }}
+        >
+          <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--gray-700)' }}>{sentTodayCount}</span>
           <span style={{ fontSize: '.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>Sent</span>
-        </div>
-        <div className="welcome-stat">
+        </button>
+
+        {/* ── Drafts badge — navigates to Drafts */}
+        <button
+          id="stat-drafts-btn"
+          onClick={onDraftsClick}
+          aria-label={`Go to Drafts (${draftsCount})`}
+          title="View drafts"
+          style={{ ...statBase }}
+        >
           <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--gray-700)' }}>{draftsCount}</span>
           <span style={{ fontSize: '.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>Drafts</span>
-        </div>
+        </button>
       </div>
     </div>
   );
@@ -136,7 +196,7 @@ interface EmailListProps {
 
 export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: EmailListProps) {
   const {
-    emails, activeLabel, searchQuery, selectedEmailId, setSelectedEmail: _setSelectedEmail,
+    emails, activeLabel, setActiveLabel, searchQuery, selectedEmailId, setSelectedEmail: _setSelectedEmail,
     trash, archive, restoreToInbox, permanentDelete, markRead, getEmailsByLabel, customLabels,
   } = useEmailStore();
   const { showToast, userPreferences } = useUiStore();
@@ -145,7 +205,13 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
 
   // HCI: S3 Informative Feedback — drives icon spin + skeleton during reload
   const [reloading, setReloading] = useState(false);
-  // lastReloadRef and handleReload are declared below, after displayedEmails
+
+  // ── Welcome-header stat-badge filter states ───────────────────────────────
+  // HCI: S7 Locus of Control — user activates filters; can always revert
+  // HCI: N3 User Control & Freedom — escape hatch is always one click away
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [sentTodayFilter, setSentTodayFilter] = useState(false);
+
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
   const searchResults = useSearch(searchQuery);
@@ -153,8 +219,23 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
   const displayedEmails = useMemo(() => {
     if (searchQuery) return searchResults;
     const accountId = activeLabel === 'inbox' ? activeAccount?.id : null;
-    return getEmailsByLabel(activeLabel, accountId ?? null);
-  }, [emails, activeLabel, searchQuery, searchResults, activeAccount?.id]);
+    let list = getEmailsByLabel(activeLabel, accountId ?? null);
+
+    // Unread-only filter — only applied when viewing inbox
+    // HCI: N7 Flexibility — power users can drill into unread without leaving inbox view
+    if (showUnreadOnly && activeLabel === 'inbox') {
+      list = list.filter(e => !e.isRead);
+    }
+
+    // Sent-today filter — scopes Sent folder to current day
+    // HCI: N2 Match Real World — users think "sent today", not "all sent ever"
+    if (sentTodayFilter && activeLabel === 'sent') {
+      const today = new Date().toDateString();
+      list = list.filter(e => new Date(e.timestamp).toDateString() === today);
+    }
+
+    return list;
+  }, [emails, activeLabel, searchQuery, searchResults, activeAccount?.id, showUnreadOnly, sentTodayFilter]);
 
   // ── Reload handler (must be after displayedEmails to avoid TDZ) ──────────
   // HCI: S3 Informative Feedback — "Checking for new mail…" toast fires immediately
@@ -206,12 +287,47 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
     onEmailSelect?.(id);
   };
 
+  // ── Stat-badge handlers ───────────────────────────────────────────────────
+
+  const handleUnreadClick = () => {
+    // Toggle the unread-only filter (stay in inbox, just scope the view)
+    setShowUnreadOnly(prev => !prev);
+  };
+
+  const handleSentClick = () => {
+    // Navigate to Sent and apply today-only filter
+    setActiveLabel('sent');
+    setSentTodayFilter(true);
+    setShowUnreadOnly(false);
+  };
+
+  const handleDraftsClick = () => {
+    setActiveLabel('drafts');
+    setSentTodayFilter(false);
+    setShowUnreadOnly(false);
+  };
+
+  // Reset stat filters when user navigates away via the sidebar
+  // (activeLabel changes externally — filters no longer make sense)
+  const prevLabelRef = useRef(activeLabel);
+  if (prevLabelRef.current !== activeLabel) {
+    prevLabelRef.current = activeLabel;
+    // Reset sent filter only when leaving sent (not when we just navigated there)
+    if (activeLabel !== 'sent' && sentTodayFilter) setSentTodayFilter(false);
+    // Reset unread filter when leaving inbox
+    if (activeLabel !== 'inbox' && showUnreadOnly) setShowUnreadOnly(false);
+  }
+
   const LABEL_TITLES: Record<string, string> = {
     inbox: 'Inbox', starred: 'Starred', sent: 'Sent', drafts: 'Drafts',
     spam: 'Spam', trash: 'Trash', allmail: 'All Mail', archived: 'Archive',
   };
   const labelTitle = searchQuery
     ? `Search: "${searchQuery}"`
+    : showUnreadOnly && activeLabel === 'inbox'
+    ? 'Inbox — Unread'
+    : sentTodayFilter && activeLabel === 'sent'
+    ? 'Sent · Today'
     : LABEL_TITLES[activeLabel] ?? (activeLabel.charAt(0).toUpperCase() + activeLabel.slice(1));
   const showAccountBadge = activeLabel === 'allmail';
 
@@ -221,7 +337,16 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
       style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--surface)' }}
     >
       {activeLabel === 'inbox' && !searchQuery && (
-        <WelcomeHeader activeAccount={activeAccount} customLabels={customLabels} emails={emails} />
+        <WelcomeHeader
+          activeAccount={activeAccount}
+          customLabels={customLabels}
+          emails={emails}
+          showUnreadOnly={showUnreadOnly}
+          sentTodayFilter={sentTodayFilter}
+          onUnreadClick={handleUnreadClick}
+          onSentClick={handleSentClick}
+          onDraftsClick={handleDraftsClick}
+        />
       )}
 
       <div className="email-list-header">
@@ -236,12 +361,54 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
 
         <h2 style={{ fontSize: '.875rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
           {labelTitle}
-          {displayedEmails.filter(e => !e.isRead).length > 0 && !searchQuery && (
+          {/* Sent-today subtitle — N2 Match Real World, W5 Effective Writing */}
+          {sentTodayFilter && activeLabel === 'sent' && (
+            <span style={{ marginLeft: 6, fontSize: '.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>
+              (today only)
+            </span>
+          )}
+          {!showUnreadOnly && !sentTodayFilter && displayedEmails.filter(e => !e.isRead).length > 0 && !searchQuery && (
             <span style={{ marginLeft: 6, fontSize: '.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>
               {displayedEmails.filter(e => !e.isRead).length} unread
             </span>
           )}
         </h2>
+
+        {/* ── Active filter chip — S7 Locus of Control, N3 User Control */}
+        {showUnreadOnly && activeLabel === 'inbox' && (
+          <button
+            onClick={() => setShowUnreadOnly(false)}
+            aria-label="Clear unread filter"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '3px 10px', marginLeft: 8,
+              background: 'var(--brand-50)', border: '1px solid var(--brand-200)',
+              borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+              fontSize: '.6875rem', fontWeight: 600, color: 'var(--brand-600)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Unread only
+            <IconClose className="w-3 h-3" />
+          </button>
+        )}
+        {sentTodayFilter && activeLabel === 'sent' && (
+          <button
+            onClick={() => setSentTodayFilter(false)}
+            aria-label="Clear today filter"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '3px 10px', marginLeft: 8,
+              background: 'var(--gray-100)', border: '1px solid var(--gray-300)',
+              borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+              fontSize: '.6875rem', fontWeight: 600, color: 'var(--gray-600)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Today only
+            <IconClose className="w-3 h-3" />
+          </button>
+        )}
 
         {/* ── Reload button ─────────────────────────────────────────────────────
              HCI: D6 Affordance   — circular-arrow icon universally signals reload
