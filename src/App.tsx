@@ -60,7 +60,7 @@ function MainApp({ showOnboarding, onOnboardingDone }: { showOnboarding: boolean
   };
 
   const handleEmailSelect = (id: string) => {
-    if (previewEmailId === id) return;
+    if (previewEmailId === id) { setPreviewEmailId(null); return; }
     setPreviewEmailId(id);
     markRead([id], true);
   };
