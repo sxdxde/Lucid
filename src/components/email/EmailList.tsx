@@ -4,8 +4,9 @@
 // HCI: G2 Common Region — bulk action bar clearly demarcated
 // HCI: N3 User Control — clear escape from bulk select mode
 // HCI: W4 Feature Exposure — preview mode with blue border highlights active selection
-import React, { useState, useMemo } from 'react';
-import { IconTrash, IconMailOpen, IconClose, IconNoEmail, IconNoSearch, IconCompose, IconArchive, IconInbox } from '../ui/Icons';
+// HCI: S3 Informative Feedback / S4 Closure — reload button with spin + skeleton + closure toast
+import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { IconTrash, IconMailOpen, IconClose, IconNoEmail, IconNoSearch, IconCompose, IconArchive, IconInbox, IconRefresh } from '../ui/Icons';
 import { Avatar } from '../ui/Avatar';
 import { EmailRow } from './EmailRow';
 import { useEmailStore } from '../../stores/emailStore';
@@ -13,6 +14,13 @@ import { useUiStore } from '../../stores/uiStore';
 import { useAccountStore } from '../../stores/accountStore';
 import { useSearch } from '../../hooks/useSearch';
 import type { Label, Account, Email } from '../../types';
+
+// ── Reload duration: long enough to feel like a real network trip,
+//    short enough not to frustrate. 1 400 ms matches the app's own
+//    skeleton boot-time (App.tsx line 43) so users recognise the pattern.
+const RELOAD_DURATION_MS = 1400;
+// Cooldown prevents rapid-fire clicks — N5 Error Prevention
+const RELOAD_COOLDOWN_MS = 3000;
 
 function SkeletonRow() {
   return (
@@ -135,7 +143,9 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
   const { getActiveAccount } = useAccountStore();
   const activeAccount = getActiveAccount();
 
-  const [loading] = useState(false);
+  // HCI: S3 Informative Feedback — drives icon spin + skeleton during reload
+  const [reloading, setReloading] = useState(false);
+  // lastReloadRef and handleReload are declared below, after displayedEmails
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
   const searchResults = useSearch(searchQuery);
@@ -145,6 +155,29 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
     const accountId = activeLabel === 'inbox' ? activeAccount?.id : null;
     return getEmailsByLabel(activeLabel, accountId ?? null);
   }, [emails, activeLabel, searchQuery, searchResults, activeAccount?.id]);
+
+  // ── Reload handler (must be after displayedEmails to avoid TDZ) ──────────
+  // HCI: S3 Informative Feedback — "Checking for new mail…" toast fires immediately
+  // HCI: S4 Closure             — outcome toast ("up to date · N unread") fires on done
+  // HCI: N5 Error Prevention    — 3 s cooldown stops accidental double-fire
+  const lastReloadRef = useRef<number>(0);
+  const handleReload = useCallback(() => {
+    const now = Date.now();
+    if (reloading || now - lastReloadRef.current < RELOAD_COOLDOWN_MS) return;
+    lastReloadRef.current = now;
+    setReloading(true);
+    showToast({ message: 'Checking for new mail…', type: 'info', duration: RELOAD_DURATION_MS - 200 });
+    setTimeout(() => {
+      setReloading(false);
+      const unreadCount = displayedEmails.filter(e => !e.isRead).length;
+      if (unreadCount > 0) {
+        showToast({ message: `Inbox up to date · ${unreadCount} unread`, type: 'success', duration: 3000 });
+      } else {
+        showToast({ message: 'All caught up — no new messages', type: 'success', duration: 3000 });
+      }
+    }, RELOAD_DURATION_MS);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reloading, showToast]);
 
   const toggleCheck = (id: string) => {
     setChecked(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
@@ -209,6 +242,31 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
             </span>
           )}
         </h2>
+
+        {/* ── Reload button ─────────────────────────────────────────────────────
+             HCI: D6 Affordance   — circular-arrow icon universally signals reload
+             HCI: L3 Fitts' Law  — placed right of label in header's attention zone
+             HCI: S3 Feedback    — icon spins while reloading (animation: spin)
+             HCI: N5 Prevention  — disabled + cursor:not-allowed during cooldown
+        ──────────────────────────────────────────────────────────────────────── */}
+        <button
+          id="reload-mail-btn"
+          className="icon-btn"
+          onClick={handleReload}
+          disabled={reloading}
+          aria-label={reloading ? 'Checking for new mail…' : 'Reload mail (check for new messages)'}
+          title={reloading ? 'Checking for new mail…' : 'Reload mail'}
+          style={{
+            marginLeft: 4,
+            color: reloading ? 'var(--brand-500)' : 'var(--gray-500)',
+            cursor: reloading ? 'not-allowed' : 'pointer',
+          }}
+        >
+          <IconRefresh
+            className="w-4 h-4"
+            style={reloading ? { animation: 'spin 0.75s linear infinite', transformOrigin: 'center' } : undefined}
+          />
+        </button>
       </div>
 
       {hasChecked && (
@@ -260,7 +318,7 @@ export function EmailList({ onEmailSelect, previewEmailId, onViewDetail }: Email
       )}
 
       <div style={{ flex: 1, overflowY: 'auto' }} role="list" aria-label="Email list">
-        {loading ? (
+        {reloading ? (
           Array.from({ length: 8 }, (_, i) => <SkeletonRow key={i} />)
         ) : displayedEmails.length === 0 ? (
           <EmptyState label={activeLabel} searchQuery={searchQuery} />
