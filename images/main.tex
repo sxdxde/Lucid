@@ -1,0 +1,2597 @@
+\documentclass[12pt,a4paper]{report}
+
+% ── Packages ──────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{tocloft}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{mdframed}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fontawesome5}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{parskip}
+
+% ── Colors ────────────────────────────────────────────────────
+\definecolor{brand}{HTML}{1A73E8}
+\definecolor{brandlight}{HTML}{E8F0FE}
+\definecolor{danger}{HTML}{EA4335}
+\definecolor{success}{HTML}{34A853}
+\definecolor{warning}{HTML}{FBBC04}
+\definecolor{gray800}{HTML}{202124}
+\definecolor{gray500}{HTML}{5F6368}
+\definecolor{gray200}{HTML}{E8EAED}
+\definecolor{dark}{HTML}{050510}
+\definecolor{principleblue}{HTML}{0D47A1}
+\definecolor{principlegreen}{HTML}{1B5E20}
+\definecolor{principlered}{HTML}{B71C1C}
+\definecolor{principlepurple}{HTML}{4A148C}
+\definecolor{principleteal}{HTML}{004D40}
+\definecolor{principleamber}{HTML}{E65100}
+
+% ── tcolorbox styles ──────────────────────────────────────────
+\tcbuselibrary{skins, breakable, raster}
+
+\newtcolorbox{principleBox}[2][]{
+  enhanced, breakable,
+  colback=brandlight, colframe=brand,
+  fonttitle=\bfseries\sffamily,
+  title={#2},
+  left=6pt, right=6pt, top=5pt, bottom=5pt,
+  boxrule=1.2pt,
+  arc=4pt,
+  #1
+}
+
+\newtcolorbox{gmailIssueBox}[2][]{
+  enhanced, breakable,
+  colback=red!5!white, colframe=danger,
+  fonttitle=\bfseries\sffamily,
+  title={#2},
+  left=6pt, right=6pt, top=5pt, bottom=5pt,
+  boxrule=1.2pt,
+  arc=4pt,
+  #1
+}
+
+\newtcolorbox{lucidSolutionBox}[2][]{
+  enhanced, breakable,
+  colback=green!5!white, colframe=success,
+  fonttitle=\bfseries\sffamily,
+  title={#2},
+  left=6pt, right=6pt, top=5pt, bottom=5pt,
+  boxrule=1.2pt,
+  arc=4pt,
+  #1
+}
+
+\newtcolorbox{imageBox}[1]{
+  enhanced,
+  colback=gray200!40!white, colframe=gray200,
+  fonttitle=\small\itshape,
+  title={#1},
+  left=4pt, right=4pt, top=4pt, bottom=4pt,
+  boxrule=1pt, arc=4pt,
+  halign=center, valign=center,
+  height=6cm,
+}
+
+\newtcolorbox{keyBox}[1][]{
+  enhanced,
+  colback=gray800!8!white, colframe=gray800!30!white,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  boxrule=0.8pt, arc=3pt,
+  #1
+}
+
+% ── Typography ────────────────────────────────────────────────
+\usepackage{lmodern}
+\renewcommand{\familydefault}{\sfdefault}
+
+% ── Page style ────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{gray500}{Lucid Mail — HCI Design Report}}
+\fancyhead[R]{\small\textcolor{gray500}{\thepage}}
+\fancyfoot[C]{\small\textcolor{gray200}{\rule{0.5\textwidth}{0.4pt}}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{gray200}\leaders\hrule height \headrulewidth\hfill}}
+
+% ── Section styling ───────────────────────────────────────────
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{gray800}}
+  {\textcolor{brand}{\chaptertitlename\ \thechapter}}{16pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{0pt}{20pt}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{gray800}}
+  {\textcolor{brand}{\thesection}}{0.8em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{gray800}}
+  {\thesubsection}{0.6em}{}
+
+% ── Custom commands ───────────────────────────────────────────
+\newcommand{\principleTag}[1]{\texttt{\small\textcolor{brand}{[#1]}}}
+\newcommand{\gmailBad}[1]{\textbf{\textcolor{danger}{#1}}}
+\newcommand{\lucidGood}[1]{\textbf{\textcolor{success}{#1}}}
+\newcommand{\featureRef}[1]{\textit{\textcolor{principlepurple}{#1}}}
+
+% ── Hyperref ──────────────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=brand,
+  urlcolor=brand,
+  citecolor=brand,
+  pdftitle={Lucid Mail — HCI Design Principles Report},
+  pdfauthor={HCI End Semester Project},
+}
+
+% ══════════════════════════════════════════════════════════════
+\begin{document}
+\onehalfspacing
+
+% ── Title Page ───────────────────────────────────────────────
+\begin{titlepage}
+  \pagecolor{dark}
+  \color{white}
+  \centering
+  \vspace*{3cm}
+
+  {\fontsize{64}{72}\selectfont\bfseries
+    \textcolor[HTML]{4285F4}{L}%
+    \textcolor[HTML]{EA4335}{U}%
+    \textcolor[HTML]{FBBC04}{C}%
+    \textcolor[HTML]{34A853}{I}%
+    \textcolor[HTML]{4285F4}{D}%
+  }\\[0.4cm]
+
+  {\LARGE\bfseries\color{white!90!dark} Mail}\\[1.2cm]
+
+  {\large\color{white!60!dark}
+    \rule{0.4\textwidth}{0.4pt}\\[0.5cm]
+    HCI End-Semester Project\\
+    \textbf{Design Principles Report}\\
+    \rule{0.4\textwidth}{0.4pt}
+  }\\[2.5cm]
+
+  \begin{tcolorbox}[
+    enhanced, sharp corners,
+    colback=white!5!dark, colframe=white!15!dark,
+    width=0.72\textwidth,
+    left=18pt, right=18pt, top=14pt, bottom=14pt,
+  ]
+    \centering
+    \color{white!80!dark}
+    {\large\bfseries Abstract}\\[8pt]
+    {\small
+      Lucid Mail is a browser-based email client, built from the ground up as an
+      Human-Computer Interaction study. Every design decision — from the resizable
+      sidebar to the 30-second autosave interval — is anchored to a named,
+      peer-reviewed HCI principle. This report traces each such decision through
+      Shneiderman's 8 Golden Rules, Nielsen's 10 Heuristics, Norman's 6 Design
+      Principles, Gestalt theory, Design Laws, Universal Design, web usability
+      guidelines, and psychological persuasion frameworks.  A dedicated chapter
+      then maps each design choice directly to a known usability issue in Gmail,
+      demonstrating how principled design can close the gap between feature
+      richness and cognitive ease of use.
+    }
+  \end{tcolorbox}
+
+  \vfill
+{\footnotesize\color{white!35!dark} © 2026 · Built with HCI ♡}
+\end{titlepage}
+\pagecolor{white}
+\color{black}
+
+% ── ToC ───────────────────────────────────────────────────────
+\tableofcontents
+\clearpage
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Introduction}
+% ══════════════════════════════════════════════════════════════
+
+\section{Project Overview}
+
+Lucid Mail is a fully functional email web application built with React and TypeScript,
+designed as a direct response to usability shortcomings in existing email clients —
+most notably Gmail. Rather than iterating on an existing codebase, Lucid was designed
+from first principles: every feature, layout choice, interaction pattern, and visual
+decision was validated against a specific, named HCI rule before implementation.
+
+The application provides:
+
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+  \item A \textbf{Landing Page} with persuasion-driven onboarding, social proof, and a night-sky
+        animation canvas to trigger visceral first impressions.
+  \item A \textbf{Top Bar} containing the wordmark, a persistent search field with filters and
+        recent-search memory, a zoom widget, settings, and a multi-account switcher.
+  \item A \textbf{Resizable Sidebar} that snaps between compact icon mode and expanded text mode,
+        housing navigation, custom labels, Meet links, and Chat contacts.
+  \item An \textbf{Email List} with a contextual Welcome Header, skeleton loading states, rich
+        empty states, and a context-sensitive bulk action bar.
+  \item An \textbf{Email Detail} view with a two-column layout: an action sidebar and a main
+        content area with smart replies, spam warnings, and context banners for Trash/Archive.
+  \item A \textbf{Compose Window} with rich text editing, 30-second autosave, subject-empty
+        warnings, recipient autocomplete, file attachments, and Undo Send.
+  \item A full \textbf{Settings} page covering theme, density, interface zoom, notifications,
+        customisable keyboard shortcuts, tags (custom labels), accounts, and email signature.
+  \item A \textbf{Keyboard Shortcuts} system with a discoverable overlay and per-shortcut
+        remapping in Settings.
+  \item \textbf{Toast Notifications} with inline Undo actions.
+  \item A \textbf{Confirm Dialog} for irreversible destructive operations.
+\end{itemize}
+
+\section{Design Philosophy}
+
+The guiding philosophy of Lucid is captured in three words the landing page repeats: ``Email,
+reimagined for how you think.'' Every decision subordinates visual novelty to cognitive ease.
+Tesler's Law — that every system has irreducible complexity — drove us to absorb complexity on
+the developer side rather than expose it to users. Zipf's Principle of Least Effort drove us
+to make every common action (compose, archive, search) reachable in under two keystrokes.
+And Raskin's Three Laws prevented us from ever designing a path that could silently lose a
+user's data.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{mainpage.jpg}
+  \caption{Lucid Mail application overview}
+\end{figure}
+% ══════════════════════════════════════════════════════════════
+\chapter{Shneiderman's 8 Golden Rules}
+% ══════════════════════════════════════════════════════════════
+
+Ben Shneiderman's eight golden rules form the backbone of interaction design evaluation.
+This chapter maps each rule to a specific, concrete feature of Lucid Mail.
+
+% ─────────────────────────────────────────────────
+\section{S1 — Strive for Consistency}
+
+\begin{principleBox}{S1 · Strive for Consistency}
+  Use identical sequences, layouts, terminology, and UI actions across every
+  part of the system. Same error style, same button positions, same terminology.
+\end{principleBox}
+
+Consistency in Lucid operates at four levels:
+
+\textbf{Visual vocabulary.} Every destructive action (Delete, Delete forever, Sign Out)
+uses the same \textcolor{danger}{red} colour and the same icon family (Feather icons).
+Every positive confirmation uses \textcolor{success}{green}. This rule is applied in the
+Bulk Action Bar, the Email Detail action sidebar, the Accounts Settings tab, and the
+Tags Settings tab — four separate components sharing one visual language.
+
+\textbf{Button hierarchy.} Primary calls-to-action (Send, Create tag, Sign in) always use
+the \texttt{btn-primary} class — blue background, white text, 7px/18px padding. Secondary
+actions always use \texttt{btn-outline} — transparent background, border, muted text.
+Destructive confirm buttons always inherit the danger colour. No exception was permitted.
+
+\textbf{Terminology.} The application never calls the same thing by two names. The
+navigation label ``Archive'' is identical to the toast message ``Archived'', the bulk bar
+button text ``Archive'', and the keyboard shortcut description ``Archive selected.'' Users
+who learn the term in one location recognise it in all others.
+
+\textbf{Keyboard shortcut hints.} Everywhere a shortcut exists, it is shown in
+parentheses in the tooltip — \texttt{Compose ( C )}, \texttt{Search mail ( / )},
+\texttt{Keyboard shortcuts ( ? )}. The formatting pattern is always the same.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Inbox Page}
+\end{figure}
+
+% ─────────────────────────────────────────────────
+\section{S2 — Enable Frequent Users to Use Shortcuts}
+
+\begin{principleBox}{S2 · Enable Shortcuts}
+  Advanced users should bypass steps that slow them down;
+  novices still follow the full path. Keyboard shortcuts, macros, autocomplete.
+\end{principleBox}
+
+Lucid implements a fully layered shortcut system, arguably the most thorough in any
+student-built email client.
+
+\textbf{Single-key shortcuts:} \texttt{C} (compose), \texttt{E} (archive selected),
+\texttt{\#} (delete selected), \texttt{Z} (undo last action), \texttt{/} (focus search),
+\texttt{?} (open shortcuts overlay).
+
+\textbf{Two-key sequence shortcuts:} \texttt{G I} (go to Inbox), \texttt{G S} (go to Sent),
+\texttt{G T} (go to Trash), \texttt{G D} (go to Drafts). These are debounced within 800 ms,
+matching Gmail's own two-key navigation model (Jakob's Law, L8).
+
+\textbf{Compose window shortcuts:} \texttt{Ctrl+B} (bold), \texttt{Ctrl+I} (italic),
+\texttt{Ctrl+U} (underline), \texttt{Ctrl+Enter} (send). These mirror standard word-processor
+conventions so existing muscle memory transfers immediately.
+
+\textbf{Discovery without recall.} The \texttt{?} key opens a full overlay that lists every
+shortcut, organised into three categories: Actions, Navigation, Search \& Help. The overlay
+is also reachable from the Help icon in the Top Bar — satisfying both the expert (hotkey) and
+the novice (visual discovery) paths simultaneously.
+
+\textbf{Remappable shortcuts.} In Settings → Shortcuts, each shortcut has a ``badge'' that
+can be clicked to capture a new key press. This is the only email client in this class that
+implements per-shortcut remapping — directly supporting the Power Law of Practice (L5), because
+users who have already built muscle memory on different clients can retrain Lucid to match.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{shortcut.jpg}
+  \caption{Keyboard Shortcuts overlay (\texttt{?} key) with three categories}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{set3.jpg}
+  \caption{Settings → Shortcuts tab with remappable key badges}
+\end{figure}
+
+
+% ─────────────────────────────────────────────────
+\section{S3 — Offer Informative Feedback}
+
+\begin{principleBox}{S3 · Informative Feedback}
+  Every action should have a visible, proportional system response.
+  Minor actions: small feedback. Major actions: substantial feedback.
+\end{principleBox}
+
+Lucid applies proportional feedback across four tiers:
+
+\textbf{Tier 1 — Micro feedback (hover/focus states).} Every button changes opacity or
+background on hover. Every text input changes border colour to \texttt{brand-500} on focus
+and returns to \texttt{border} on blur. This is implemented identically in the search bar,
+compose recipient inputs, subject input, tag name input, and Settings text areas.
+
+\textbf{Tier 2 — Status indicators.} The Compose Window title bar shows a live
+\texttt{Saved} / \texttt{Saving…} indicator using a small \textcolor{success}{green}
+checkmark, giving the user continuous awareness that their draft is safe — without interrupting
+the writing flow. This responds to Raskin's First Law: never allow work to be lost.
+
+\textbf{Tier 3 — Toast notifications.} Every significant action (archive, trash, send,
+restore, permanently delete) produces a toast at the bottom of the screen with the action's
+result in plain English: ``Archived'', ``Moved to Trash'', ``Message sent''. Toasts for
+reversible actions include an ``Undo'' link. Toasts for irreversible ones (``Permanently
+deleted'') carry no undo link — deliberately, because offering false hope of reversal
+would violate user trust.
+
+\textbf{Tier 4 — Loading skeletons.} When the email list is loading, eight skeleton rows
+are rendered — animated grey bars matching the shape of real email rows. This uses the
+Gestalt Closure principle (G1): the brain reads the familiar shape and understands ``data is
+coming'' without any text instruction.
+
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{red_saved.jpg}
+  \caption{``Saved'' indicator in Compose window title bar}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{feedback1.jpg}
+  \caption{Toast notification with ``Trash'' action after archive}
+\end{figure}
+
+
+% ─────────────────────────────────────────────────
+\section{S4 — Design Dialogs to Yield Closure}
+
+\begin{principleBox}{S4 · Dialogs for Closure}
+  Multi-step tasks should have a clear, recognisable end state.
+  Users should never wonder ``did it work?''
+\end{principleBox}
+
+Closure is implemented in Lucid through \textit{context banners} — full-width inline strips
+that appear at the top of the Email Detail view when the email's current state requires user
+awareness.
+
+When an email in the \textbf{Trash} is opened, a warm amber banner reads:
+\textit{``This email is in Trash. Messages are permanently deleted after 30 days.''}
+Two action buttons — Restore to Inbox and Delete forever — are directly embedded. The user
+instantly knows the email's fate, their remaining options, and the time window.
+
+When an email in the \textbf{Archive} is opened, a blue banner reads:
+\textit{``This email is archived and not in your Inbox.''} This directly answers the
+question users frequently ask in Gmail: ``where did my email go?''
+
+After \textbf{sending}, the compose window closes and a success toast appears: ``Message
+sent'' — confirming the action without requiring the user to navigate to Sent to verify.
+
+After \textbf{login}, the inbox appears immediately and the Welcome Header greets the user
+by first name with live stats — confirming successful session establishment without a
+separate ``You are now logged in'' screen.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{closure.jpg}
+  \caption{Trash context banner with Restore and Delete Forever actions}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{archieve.jpg}
+  \caption{Archive context banner: ``This email is archived and not in your Inbox'' — closure for the user about email state}
+\end{figure}
+
+
+% ─────────────────────────────────────────────────
+\section{S5 — Permit Easy Reversal of Actions}
+
+\begin{principleBox}{S5 · Permit Reversal}
+  Users should be able to undo any reversible action.
+  Reduces anxiety and encourages exploration.
+\end{principleBox}
+
+Reversal in Lucid is implemented at three levels, each matching the severity of the action:
+
+\textbf{Level 1 — Instant undo via toast.} Archive, Trash, Move, and Mark Read operations
+display a toast with an ``Undo'' button. Clicking it calls \texttt{undoLastAction()} from the
+email store, which applies a stored \texttt{UndoAction} snapshot to restore the previous state.
+
+\textbf{Level 2 — Undo keyboard shortcut.} The \texttt{Z} key triggers the same undo
+mechanism from the keyboard without requiring the user to reach for the mouse. If there is
+nothing to undo, a toast reads ``Nothing to undo'' — preventing a silent no-op.
+
+\textbf{Level 3 — Soft-delete.} Deleting an email moves it to Trash, not permanent
+deletion. The Trash auto-purges after 30 days. Users have three weeks to discover and recover
+a misdeleted email. This matches Gmail's own model (Jakob's Law) but is made explicit with
+the Trash banner (S4).
+
+\textbf{Destructive confirmation.} Permanently deleting from Trash requires explicit
+confirmation via a \texttt{ConfirmDialog} with the label ``Delete forever (cannot be undone)''.
+The destructive button is rendered in red. The cancel button is the visually dominant path,
+implementing the Fitts' Law principle of making the dangerous target smaller and less prominent.
+
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{reversal.jpg}
+  \caption{Trash context banner with Restore and Delete Forever actions}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{forward.jpg}
+  \caption{S5 — Permit Reversal: Forward action in Email Detail --- all email actions reachable and reversible}
+\end{figure}
+
+% ─────────────────────────────────────────────────
+\section{S6 — Error Prevention and Handling}
+
+\begin{principleBox}{S6 · Error Prevention}
+  Prevent errors first by design; when unavoidable, provide plain-language
+  recovery guidance.
+\end{principleBox}
+
+\textbf{Prevention — subject field guard.} If the user attempts to send a message with an
+empty subject line, the send is intercepted. The subject field's border turns
+\textcolor{danger}{red} and a warning bar appears: \textit{``Subject is empty.''} alongside
+a ``Send anyway'' escape hatch — respecting autonomy (S7) while preventing the most common
+composing mistake.
+
+\textbf{Prevention — send button disablement.} The Send button is disabled when the
+\texttt{To} field is empty. Users cannot send an email with no recipient, regardless of
+compose window state.
+
+\textbf{Prevention — tag name uniqueness.} In Settings → Tags, creating a duplicate tag
+name triggers an immediate inline error: \textit{``A tag with this name already exists.''}
+before the form is submitted — constraining the interaction to valid inputs only (Norman's
+Constraints, D3).
+
+\textbf{Prevention — email validation at login.} The login modal validates format
+(\texttt{@} required) before submission and marks the field in red with
+\textit{``Enter a valid email address.''} The error attaches to the specific field rather than
+appearing at the top of the form — placing the error where the user's attention already is
+(Raskin's Third Law).
+
+\textbf{Recovery — compose autosave.} Every 30 seconds of inactivity, the compose window
+silently saves a draft. If the browser closes or the window crashes, the draft is recoverable
+from the Drafts folder — directly implementing Raskin's First Law.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{errorhand.jpg}
+  \caption{Empty subject warning bar with ``Send anyway'' escape hatch}
+\end{figure}
+% ─────────────────────────────────────────────────
+\section{S7 — Support Internal Locus of Control}
+
+\begin{principleBox}{S7 · Locus of Control}
+  The user always feels they are controlling the system, not being controlled by it.
+  No auto-popups, no surprise navigation, no system-initiated changes.
+\end{principleBox}
+
+\textbf{Resizable sidebar.} The sidebar has a drag handle on its right edge. Users can pull
+it to any width between 68px (compact icon mode) and 300px. At 120px it snaps to either
+compact or expanded — providing predictable snap behaviour while still letting the user control
+the breakpoint they want. No setting menu is required; the affordance is the handle itself.
+
+\textbf{Settings are immediate.} In the Settings page, there is no ``Save'' button.
+Every toggle, segmented control, or option card applies its change instantly. The subtitle
+``Changes are saved automatically'' appears below the Signature textarea to make this explicit.
+Users never have to wonder whether their preferences were committed.
+
+\textbf{No auto-submission.} The Compose Window does not send on tab-out, on window-blur,
+or on any system event. Only the Send button or \texttt{Ctrl+Enter} triggers sending. The
+close button (\texttt{×}) autosaves the draft and closes — it never sends.
+
+\textbf{Compose window controls.} The title bar exposes Minimise, Fullscreen, and Close
+buttons. The window can be minimised to a 48px strip (to keep context while reading), or
+expanded to a full-screen editor for long messages. The user decides the modality, not the
+system.
+
+\textbf{Account switching.} The account switcher in the Top Bar shows all signed-in
+accounts. The user decides which one is active at any moment. The system never auto-switches
+based on an incoming email from a different account.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{locuscontrol.jpg}
+  \caption{Locus Of Control}
+\end{figure}
+
+% ─────────────────────────────────────────────────
+\section{S8 — Reduce Short-Term Memory Load}
+
+\begin{principleBox}{S8 · Reduce STM Load}
+  Don't make users remember information across screens. Display what they need,
+  when they need it. Related to Miller's 7$\pm$2 Law.
+\end{principleBox}
+
+\textbf{Welcome Header.} When the inbox is open, a Welcome Header above the email list
+displays the active account's name, avatar, and three live statistics: Unread count,
+Sent count, and Drafts count. Users never need to navigate to Sent or Drafts just to
+find out how many they have.
+
+\textbf{Unread badge in sidebar.} When the sidebar is in expanded mode, unread counts
+appear as coloured badges on each nav item. In compact mode, an unread dot-badge
+(\texttt{unread-dot-badge}) signals the presence of unread mail without revealing the
+number — respecting the compact layout while preserving the signal.
+
+\textbf{Recent searches.} The search dropdown surfaces the last five search queries
+when focused with an empty field. Users do not need to remember what they previously
+searched — the system remembers and offers recognition over recall.
+
+\textbf{Context-aware bulk bar.} When emails are selected, the bulk action bar shows
+only actions appropriate for the current folder. In Trash, it shows ``Restore'' and
+``Delete forever'' — not ``Archive'' (which would be nonsensical). In Archive, it shows
+``Move to Inbox'' and ``Move to Trash.'' The relevant memory of ``what folder am I in''
+is embedded in the available actions, not required from the user.
+
+\textbf{Email detail — sender and date always visible.} The sender's name, email, and
+full timestamp are always displayed in the Email Detail header, regardless of scroll position.
+Users who receive emails a week later do not need to remember when they arrived.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{miller.jpg}
+  \caption{Reduce Short-Term Memory Load}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Nielsen's 10 Usability Heuristics}
+% ══════════════════════════════════════════════════════════════
+
+% ─────────────────────────────────────────────────
+\section{N1 — Visibility of System Status}
+
+The system must always communicate its current state via timely, appropriate feedback.
+
+In Lucid, the active navigation item receives \texttt{aria-current="page"} and is
+highlighted with a blue background (\texttt{brand-50}) and bold text — making the current
+location unambiguous at all times. The search bar placeholder text includes \texttt{( / )} to
+signal the keyboard shortcut, surfacing system capability as status information.
+
+The Compose Window title bar serves as a persistent status strip: it shows the email's
+subject (or ``New message''), a save-status indicator (\texttt{✓ Saved} / \texttt{Saving…}),
+and the window-state buttons. Even when minimised to 48px, the subject is visible — the user
+always knows what message they are working on.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Sidebar with ``Inbox'' active item highlighted in blue}
+\end{figure}
+
+% ─────────────────────────────────────────────────
+\section{N2 — Match Between System and Real World}
+
+Terminology and metaphors must come from the user's world, not technical internals.
+
+Lucid avoids all internal jargon. The folders are named Inbox, Starred, Sent, Archive,
+Drafts, Spam, and Trash — the same nouns English-speaking users have used in email since
+the 1990s (Jakob's Law). Icons reinforce the metaphors: a trash can for Trash, an envelope
+for Inbox, a star for Starred, a paper aeroplane for Send.
+
+The compose body placeholder reads: ``Write your message… (Ctrl+B bold, Ctrl+I italic,
+Ctrl+U underline)'' — plain English with inline teaching, not ``ContentEditable region
+with rich text support enabled.''
+
+Error messages use the same register: ``Enter a valid email address'' (not ``Invalid
+input format''), ``Subject is empty'' (not ``Missing required header field''), ``No results
+for X'' with a suggestion to ``try different keywords'' (not ``Query returned 0 records'').
+
+% ─────────────────────────────────────────────────
+\section{N3 — User Control and Freedom}
+
+Users often take wrong turns; always provide a clear exit.
+
+Every view in Lucid has an escape. The Email Detail has a ``Back'' button with a left arrow.
+The Settings page has a back button in its header. Compose windows have a close (×) button,
+a minimise button, and the keyboard \texttt{Escape} key dismisses the shortcuts overlay.
+The bulk-select mode (selecting emails by checkbox) has an explicit close button (×) in the
+bulk bar, returning to normal mode. No modal or mode exists in Lucid without a visible,
+labelled escape.
+
+The search bar's clear button (\texttt{×}) appears as soon as text is typed, removing the
+need to manually select-all and delete — a one-click escape from the search state.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{search.jpg}
+  \caption{Bulk action bar with close (×) to exit selection mode}
+\end{figure}
+
+% ─────────────────────────────────────────────────
+\section{N4 — Consistency and Standards}
+
+Users should not wonder whether different words mean the same thing.
+
+Platform conventions are followed rigorously. The top bar layout — logo left, search
+centre, account right — mirrors Google's own application chrome (Jakob's Law). Dropdown
+menus all share the \texttt{.dropdown} class: same border, same border-radius, same shadow,
+same item hover style. Every dropdown fades in with a \texttt{fade-up} animation at the same
+speed (150ms).
+
+Icon semantics are locked: the same star icon means starred/unstarred in the email list,
+the email detail sidebar, and the bulk action bar. The same trash icon means delete in
+compose (discard draft), email rows (delete), and the detail sidebar (move to trash).
+
+% ─────────────────────────────────────────────────
+\section{N5 — Error Prevention}
+
+Design proactively eliminates error-prone situations.
+
+Beyond the subject-guard and recipient-guard described under S6, Lucid prevents errors through
+\textbf{constraint} (Norman D3). The Send button is a \texttt{disabled} HTML attribute —
+not just visually dimmed — when the To field is empty, which means it is truly unreachable
+by keyboard focus.
+
+In the Tags tab, the ``Create tag'' button is the only submission path; pressing Enter
+in the name field triggers the same handler, preventing accidental blank-name tags.
+
+In the zoom widget, the \texttt{−} button is \texttt{disabled} at 70\% and the \texttt{+}
+button is \texttt{disabled} at 150\%, preventing the interface from ever reaching an
+unreadable state through repeated clicks.
+
+% ─────────────────────────────────────────────────
+\section{N6 — Recognition over Recall}
+
+Show options; do not make users remember commands.
+
+The sidebar labels display icons alongside text when expanded. In compact mode, icons alone
+are shown — but every compact item has a \texttt{Tooltip} revealing its full label on hover,
+bridging recognition and recall. Custom label buttons in compact mode show the label's first
+letter with its unique colour — recognition of the colour replaces recall of the name.
+
+The recipient autocomplete in the Compose Window surfaces a dropdown of matching contacts
+as the user types. Users do not need to remember full email addresses — the first two
+characters trigger recognition-based selection.
+
+The search dropdown shows recent searches when the field is focused and empty — surfacing
+history without requiring the user to remember what they previously typed.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{readymade_options.jpg}
+  \caption{Recognition over Recall}
+\end{figure}
+
+
+% ─────────────────────────────────────────────────
+\section{N7 — Flexibility and Efficiency of Use}
+
+Cater to both novice and expert users.
+
+Lucid explicitly supports two usage modes. \textbf{Novice users} navigate by clicking the
+sidebar, reading tooltip labels, using the visible search bar, and clicking action buttons.
+\textbf{Expert users} compose with \texttt{C}, search with \texttt{/}, archive with
+\texttt{E}, navigate with \texttt{G I / G S}, and format with \texttt{Ctrl+B}.
+
+The density setting (Compact / Default / Spacious) lets expert users who process email
+quickly choose Compact — seeing more emails per screen — while less frequent users prefer
+Spacious for better legibility.
+
+The zoom widget in the Top Bar lets users with high-resolution monitors scale down to 70\%
+for information density, while users with accessibility needs scale up to 150\%.
+
+% ─────────────────────────────────────────────────
+\section{N8 — Aesthetic and Minimalist Design}
+
+Every element competes for attention. Irrelevant information reduces the visibility of important information.
+
+Lucid's inbox view contains exactly four pieces of information per email row:
+the sender avatar (identity), the subject and preview (content), the timestamp (recency),
+and a star (importance). No advertisement banners, no promotional score widgets, no
+``Promotions'' / ``Social'' / ``Updates'' tab noise from Gmail.
+
+The Email Detail's action sidebar is a single column of icon-only buttons with no labels —
+relying on \texttt{Tooltip} for discovery. This keeps the main reading area at full width
+without a distracting toolbar row across the top.
+
+The Settings page uses generous whitespace (40px horizontal, 48px vertical padding) and
+groups each setting into a clearly titled section — consistent with Simon's Law: visual
+hierarchy reduces perceived complexity.
+
+% ─────────────────────────────────────────────────
+\section{N9 — Help Users Recover from Errors}
+
+Error messages must identify what went wrong and how to fix it.
+
+Every error in Lucid is inline, co-located with the field that caused it, written in
+first-person-familiar English. In the login modal: \textit{``Enter a valid email address''}
+appears directly below the email field in \textcolor{danger}{red}. In the Tags tab:
+\textit{``A tag with this name already exists.''} appears below the name input.
+In the compose warning bar: \textit{``Subject is empty.''} appears immediately below the subject
+row with a ``Send anyway'' escape — acknowledging the error while respecting that the user
+might have a legitimate reason to send without a subject.
+
+None of these messages reference internal states, codes, or HTTP methods.
+
+% ─────────────────────────────────────────────────
+\section{N10 — Help and Documentation}
+
+Even self-explanatory systems need searchable, task-focused help.
+
+The Help button (question-mark icon, top-right of the Top Bar) opens the Keyboard Shortcuts
+Overlay — a task-focused reference categorised into Actions, Navigation, and Search \& Help.
+The shortcut descriptions are written as verbs (``Compose new email'', ``Archive selected'',
+``Focus search bar'') — task-oriented language, not feature-names.
+
+Tooltips are the primary in-context help mechanism: every icon-only button in the sidebar,
+the Top Bar, and the Email Detail sidebar has a \texttt{Tooltip} with a concise action
+description, triggered on hover without interrupting the user's current task
+(unobtrusiveness principle of User Support).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{shortcut_icon.jpg}
+  \caption{Recognition over Recall}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Norman's 6 Design Principles}
+% ══════════════════════════════════════════════════════════════
+
+Donald Norman's principles, introduced in \textit{The Design of Everyday Things},
+focus on the psychology of interaction at the individual control level.
+
+\section{D1 — Visibility}
+
+Functions must be visible to be discoverable. Hidden equals unused.
+
+The Compose button is the topmost element in the sidebar in both compact and expanded modes.
+It is the first thing the sidebar renders, matching the Primacy Effect (L2). In compact mode
+it is a 38px circle with a \texttt{+} — unmissable at any sidebar width. In expanded mode it
+becomes a full-width blue pill with the word ``Compose.''
+
+The search bar spans the entire centre of the Top Bar, with \texttt{flex: 1; max-width: 720px}.
+It is always visible; it is never behind a click-to-reveal icon. This directly addresses
+Gmail's mobile regression where the search field is collapsed to an icon.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{expand_closure.jpg}
+  \caption{Compose button in compact (circle) and expanded (pill) sidebar modes}
+\end{figure}
+
+\section{D2 — Feedback}
+
+Every action must produce an immediate, perceivable response.
+
+Beyond the toast and save-status systems already described, Lucid adds micro-feedback at the
+input level. The tag colour selector in Settings uses a circular button grid; the selected
+colour gets a 3px dark border \textit{and} a box-shadow ring in the same colour — two
+simultaneous feedback signals to accommodate both high-contrast and colour-dependent users
+(Universal Design U4).
+
+The Login button shows a spinning CSS animation (\texttt{animation: spin .7s linear infinite})
+during the authentication flow — communicating ``the system is working'' without blocking
+the UI or losing the user's context.
+
+\section{D3 — Constraints}
+
+Restrict interaction to valid actions only.
+
+Physical constraints: the sidebar resize handle can only be dragged horizontally; the minimum
+width (68px) and maximum width (300px) are enforced at the JavaScript event level.
+
+Logical constraints: the zoom widget buttons are disabled at the boundary values. The Send
+button is genuinely disabled (not just styled) when the To field is empty. The tag ``Create''
+button allows submission only when the name field is non-empty.
+
+Cultural constraints: the Delete forever button is styled in red because red universally
+signals danger in Western UI conventions. The Restore button is blue (brand action) because
+blue signals trusted, safe navigation.
+
+\section{D4 — Mapping}
+
+Controls must logically relate to their effects.
+
+The sidebar resize handle appears on the \textit{right edge} of the sidebar — dragging
+rightward makes it wider, dragging leftward makes it narrower. The direction of the drag maps
+directly to the direction of the effect, matching the steering-wheel analogy (same direction).
+
+Compose window window-control buttons appear in the \textit{title bar} of the compose window —
+not in the body or the footer. This maps to the OS convention (Windows, macOS) where window
+controls live at the top-right of window chrome.
+
+The Cc and Bcc toggles in the Compose Window appear at the right edge of the To/From area —
+the logical location where ``additional recipients'' would be added in a physical letter-writing
+metaphor.
+
+\section{D5 — Consistency}
+
+Similar interface elements do similar things. Rules have no exceptions.
+
+All left-click interactions select or activate. All hover states use the same 120ms
+transition. All disabled states use \texttt{opacity: 0.5}. All icon buttons (\texttt{icon-btn})
+are 36$\times$36px squares with \texttt{border-radius: var(--radius-sm)} and the same
+hover background: \texttt{var(--gray-100)}.
+
+\section{D6 — Affordance}
+
+Object appearance communicates how it should be used.
+
+The Compose circle button (\texttt{+}) affords clicking with a clear circular shape and a
+recognisable plus symbol. The sidebar resize handle is a 4px-wide strip that changes cursor
+to \texttt{col-resize} on hover — affording horizontal dragging. Every text input field has
+a 1.5px border that changes colour on focus — affording text entry. The star icon affords
+toggling (filled = active, outline = inactive).
+
+The zoom widget's \texttt{−} and \texttt{+} labels directly signal their arithmetic effects
+— minus decreases, plus increases — without requiring any label or documentation.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{locuscontrol.jpg}
+  \caption{Sidebar resize handle with cursor affordance}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Gestalt Principles}
+% ══════════════════════════════════════════════════════════════
+
+The Gestalt school of perceptual psychology provides the theoretical basis for how users
+group, separate, and navigate visual information in Lucid's interface.
+
+\section{G1 — Closure (Reification)}
+
+The brain fills in missing information to complete familiar shapes. Lucid uses skeleton
+loading rows — animated grey bars in the exact proportions of a real email row (avatar circle,
+sender bar, preview bar, timestamp bar) — so that users perceive incoming data before it
+arrives. The shape is recognised; the content is mentally anticipated. This prevents the
+disorienting ``blank page flash'' that triggers negative visceral reactions (P3).
+
+\section{G2 — Common Region}
+
+Elements inside a bordered area are perceived as one group.
+
+The bulk action bar (\texttt{bulk-bar}) is a visually distinct strip with its own background
+colour (\texttt{var(--brand-50)}), top border (\texttt{1px solid var(--brand-100)}), and
+height. When it appears, it is immediately perceived as a region separate from the email list
+below — a ``control panel'' for the selection. Users do not confuse it with the email header.
+
+Each email row is bounded by a subtle bottom border, which creates micro-regions that group
+each email's metadata (avatar, sender, subject, preview, timestamp) into one scannable unit.
+
+\section{G3 — Proximity}
+
+Elements close together are perceived as related.
+
+In the Email Detail view, the two-column layout uses physical separation as a grouping
+mechanism: the action sidebar (star, archive, trash, spam) is a narrow left column, visually
+close together, perceived as one group of ``actions on this email.'' The main content
+(subject, sender, body, smart replies, reply/forward buttons) fills the right column —
+separated by a visible border.
+
+In the Settings page, each setting has its label and description on the left, and its
+control (toggle, segmented control, option cards) on the right — maintaining proximity of
+label to control throughout all six tabs.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{spam.jpg}
+  \caption{Email Detail two-column layout: action sidebar (left) and content (right)}
+\end{figure}
+
+\section{G4 — Common Fate}
+
+Elements moving together are seen as one group.
+
+In the search dropdown, all results slide in together with the same \texttt{fade-up}
+animation. The result group is perceived as a unified response to the search query,
+not as individual independent items appearing sequentially.
+
+When a compose window is minimised, the title bar collapses smoothly — the entire window
+shrinks as one element, reinforcing that it is a single object changing state, not a set of
+disparate controls being hidden.
+
+\section{G5 — Symmetry}
+
+Symmetrical compositions are perceived as stable.
+
+The landing page hero section is centred both horizontally and vertically within the viewport.
+The wordmark, headline, subheadline, CTAs, and fine print are all centre-aligned — producing
+a symmetrical composition that conveys calm authority. The feature cards grid and testimonials
+grid both use \texttt{auto-fit} with equal-width columns — symmetric layout signals order
+and credibility.
+
+The Compose Window is consistently right-aligned at a fixed \texttt{right: 16px} offset —
+multiple windows offset by a fixed 556px — so that even with multiple compose windows open,
+the layout remains geometrically predictable.
+
+\section{G6 — Similarity}
+
+Elements sharing visual traits are perceived as related.
+
+All navigation items in the sidebar share the same height (40px), the same icon size
+(16$\times$16px), the same font size (0.875rem), and the same hover background. They are
+immediately perceived as a navigation group.
+
+All toast notifications share the same bottom-fixed position, the same border-radius, the
+same shadow, and the same typographic hierarchy — sender name bold, message body regular,
+Undo link in brand colour. A user who sees one toast knows how to read every subsequent one.
+
+\section{G7 — Figure and Ground}
+
+The brain separates foreground objects from background.
+
+When a compose window is open, a semi-transparent dark overlay (\texttt{rgba(32,33,36,.28)})
+with a \texttt{backdropFilter: blur(3px)} is applied to the entire application behind it.
+This blurs the background into the ``ground'' and brings the compose window to the
+``figure'' — making the modal's priority unambiguous without completely hiding the
+context behind it.
+
+The same technique is used for the login modal on the landing page (\texttt{rgba(0,0,0,.6)}
+with \texttt{blur(8px)}) — the page remains visible but subordinate.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{2.jpg}
+  \caption{Email Detail two-column layout: action sidebar (left) and content (right)}
+\end{figure}
+
+\section{G8 — Continuity}
+
+Elements aligned on a smooth path or line are seen as connected.
+
+The Settings page left navigation is a vertical list of six tab buttons — all left-edge
+aligned, all with identical spacing (2px gap). The eye travels smoothly down the list
+perceiving it as a single navigation rail, not six independent controls.
+
+In the Email Detail, the subject, sender section, and body are all left-aligned, creating a
+vertical reading line that the eye follows naturally top-to-bottom without interruption.
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Design Laws}
+% ══════════════════════════════════════════════════════════════
+
+\section{L1 — Miller's Law (7$\pm$2)}
+
+Short-term memory holds approximately seven chunks of information.
+
+The primary sidebar navigation is divided: only four items (Inbox, Starred, Sent, Archive)
+are shown by default. A ``More folders'' toggle reveals the remaining four (All Mail, Drafts,
+Spam, Trash). This 4+4 chunking keeps both layers within Miller's limit. The Settings page
+has exactly six tabs — within the 7$\pm$2 range. The Shortcuts overlay has three categories,
+each with four to six shortcuts.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{miller.jpg}
+  \caption{Miller's Law}
+\end{figure}
+
+\section{L2 — Primacy and Recency Effect}
+
+Users best remember the first and last items in a list.
+
+In the sidebar, Inbox is always first — the most-used destination. In the login modal,
+``Email \& Password'' is the first tab — the most common authentication method. In the
+Settings tabs, ``Appearance'' is first (the most exploratory users try) and ``Signature''
+is last (the setting users return to finish their setup). In the landing page navigation,
+``Sign in'' is last (recency) and ``Get started free'' is the final call-to-action.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{recency.jpg}
+  \caption{Miller's Law}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{set6.jpg}
+  \caption{Miller's Law}
+\end{figure}
+
+\section{L3 — Fitts' Law}
+
+Click time increases with distance and decreases with target size.
+
+The Compose button is the largest clickable element in the sidebar in expanded mode —
+a full-width 44px-high pill — because Compose is the most frequently initiated action.
+In compact mode it is a 38$\times$38px circle, meeting Apple's 44$\times$44px minimum
+touch target recommendation.
+
+The permanent-delete confirmation button in the ConfirmDialog is smaller and bordered
+in red — a deliberately smaller, visually less prominent target to reduce accidental
+permanent deletion.
+
+The zoom \texttt{−} and \texttt{+} buttons are 24px squares — small but adjacent to
+each other for quick fine-tuning. The spacing between them and the label is minimal,
+reducing the distance users must travel between presses.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Compose button as the largest target in the sidebar (Fitts' Law)}
+\end{figure}
+
+\section{L4 — Hick's Law}
+
+Decision time increases with the number of choices.
+
+Lucid reduces choices at every decision point. The Compose Window's formatting toolbar
+has exactly seven actions (Bold, Italic, Underline, Link, Bullet list, Blockquote, Attach)
+— the primary formatting operations only, not a full word-processor toolbar.
+
+The search filters surface only two options: ``Has attachment'' (toggle) and ``From:''
+(text). Advanced filter logic is not exposed at the UI level — complexity is absorbed
+(Tesler's Law, L9).
+
+The Settings tabs are labelled with single-concept nouns (Appearance, Notifications,
+Shortcuts, Tags, Accounts, Signature). No tab combines two concepts, preventing the
+``where would I find this?'' choice paralysis.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{compose.jpg}
+  \caption{Hick's Law}
+\end{figure}
+
+\section{L5 — Power Law of Practice}
+
+Task completion time decreases as a function of practice trials.
+
+Lucid's keyboard shortcut system is designed to accelerate with practice. The first time
+a user opens the app, they navigate via mouse. After ten sessions, the \texttt{C} key for
+compose becomes automatic. The two-key sequences (\texttt{G I}, \texttt{G S}) feel
+difficult on day one but are near-instant after a week — matching the logarithmic learning
+curve.
+
+The shortcut remap feature directly acknowledges that users coming from other clients
+(\textit{e.g.} Superhuman: \texttt{E} for archive) have already built practice-curve
+memory that should not be erased. Remapping \texttt{E} or \texttt{\#} costs zero
+retraining.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{shortcut.jpg}
+  \caption{Power Law of Practice}
+\end{figure}
+
+\section{L6 — Pareto Principle (80/20)}
+
+80\% of usage comes from 20\% of features.
+
+The primary 20\% in an email client: compose, read, search, archive, delete. Every one
+of these is accessible in Lucid with a single input: \texttt{C}, click-to-read, \texttt{/},
+\texttt{E}, \texttt{\#}. The remaining 80\% of features (tags, notifications, signature,
+meeting links, chat) are progressively disclosed through the sidebar ``More'' toggle and
+the Settings page — visible and reachable, but not competing for attention on the main
+interface.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{set1.jpg}
+  \caption{Pareto Principle}
+\end{figure}
+
+\section{L7 — Zipf's Principle of Least Effort}
+
+Users want maximum outcome for minimum effort.
+
+\textbf{Smart replies} are the clearest manifestation: after reading an email, the user
+sees three one-click replies pre-generated from the email context. A single click opens
+a compose window pre-filled with the response — reducing a 30-second task to 2 seconds.
+
+\textbf{Recipient autocomplete} reduces email address entry from a full typing task to a
+two-character recognition-and-select operation.
+
+\textbf{Bulk operations} allow selecting all emails in a label with one checkbox toggle,
+then archiving or deleting all with one button — compressing N repetitive actions into one.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{readymade_options.jpg}
+  \caption{Smart reply buttons in Email Detail view}
+\end{figure}
+
+\section{L8 — Jakob's Law of Usability}
+
+Users expect your site to work like every other site they use.
+
+Lucid follows the standard web application shell:
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+  \item Logo top-left → returns to inbox on click.
+  \item Search bar centred in the top bar.
+  \item Account/profile controls at top-right.
+  \item Navigation in the left sidebar.
+  \item Content in the main right panel.
+  \item Footer on the landing page: Privacy, Terms, Security, Help.
+\end{itemize}
+
+The LUCID wordmark uses the exact Google brand colours (Blue, Red, Yellow, Green, Blue)
+to leverage existing colour associations with trusted, familiar software. Users who have
+used Gmail for a decade will read this as a deliberate reference — reducing the novelty
+anxiety of switching clients.
+
+
+\section{L9 — Tesler's Law (Conservation of Complexity)}
+
+Every application has irreducible complexity. If removed from the UI, it moves to the developer.
+
+The autocomplete logic in the Compose Window silently parses the To/Cc/Bcc fields, splits
+on commas, isolates the last entry, and filters contacts — absorbing the complexity of
+email-address parsing. The user types a name fragment and selects.
+
+The search system applies filters from two sources (the visual filter chips and the inline
+From: field) and merges them with the query string in a \texttt{useSearch} hook — the user
+toggles a chip and results update; all intersection logic is invisible.
+
+Draft autosave reconstructs a full email object (with sender, recipients, labels, thread ID)
+from partial compose state every 30 seconds — the user never configures this, it just works.
+
+\section{L10 — Raskin's 3 Laws}
+
+\textbf{Law 1 — Never harm your work.} Autosave every 30 seconds. Soft-delete with a
+30-day recovery window. Undo for all reversible actions. Permanent delete requires a
+two-step confirmation.
+
+\textbf{Law 2 — Never waste your time.} Recipient autocomplete. Smart replies. Bulk
+actions. Keyboard shortcuts. The system infers the draft save ID (\texttt{draft-\{id\}})
+rather than asking the user to name their drafts.
+
+\textbf{Law 3 — Be humane.} Error messages are co-located with the field that caused them.
+The subject-empty warning appears immediately below the subject row — where the user is
+already looking — not at the top of the compose window where it would be outside their
+locus of attention. The Caps Lock indicator example from the reference document inspired
+placing all validation inline.
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Visual Design Principles}
+% ══════════════════════════════════════════════════════════════
+
+\section{V1 — Unity}
+
+All elements feel harmonious and belong together.
+
+Lucid uses a single CSS custom-property design token system (exposed as \texttt{:root}
+variables). Every colour, border-radius, shadow, and spacing value is derived from a
+named token (\texttt{--brand-500}, \texttt{--radius-md}, \texttt{--shadow-xs}). This
+prevents accidental inconsistency: a developer cannot accidentally use a slightly different
+blue because there is only one blue in scope.
+
+The LUCID wordmark appears in three sizes (sm, md, lg) but always uses the same five Google
+colours in the same order — a unified identity across landing page, top bar, compose window
+title bar, and login modal.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Unity}
+\end{figure}
+
+\section{V2 — Hierarchy}
+
+Visual weight signals importance.
+
+In the inbox, the sender name of unread emails is set in bold; the subject and preview of
+unread emails are in \texttt{var(--text-primary)} (near-black). Read emails' senders and
+previews shift to \texttt{var(--text-secondary)} (grey) — a two-tier typographic hierarchy
+that visually sorts the inbox by action-required state without any label or badge.
+
+In the email detail, the subject is an \texttt{<h1>} at the largest font size (1.375rem,
+bold). The sender name is secondary (0.9375rem, semi-bold). The sender email and timestamp
+are tertiary (0.75rem, muted grey). Body text sits between the subject and the timestamp in
+both size and visual weight — the full hierarchy is derivable from the page without
+reading a word.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{preview2.jpg}
+  \caption{Hierarchy}
+\end{figure}
+
+\section{V3 — Balance}
+
+Even distribution of visual weight prevents visual unease.
+
+The top bar achieves asymmetric balance: the logo (left) carries brand weight; the search
+bar (centre) carries functional weight; the icon cluster (right) is lighter in visual mass.
+Despite being different widths, the three regions feel balanced because the search bar's
+\texttt{flex: 1} expansion fills the centre without over-weighting either side.
+
+The landing page features and testimonials grids use \texttt{repeat(auto-fit,
+minmax(280px, 1fr))} — auto-filling equal-width columns that maintain visual balance even
+as viewport width changes.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Balance : Sizing between sidebar, content, top search bar}
+\end{figure}
+
+\section{V4 — Contrast}
+
+Differences in colour and size make elements stand out.
+
+The primary CTA button on the landing page (``Get started free'') uses a deep blue
+(\texttt{\#1A73E8}) with a glowing box-shadow (\texttt{rgba(26,115,232,.55)}) against a dark
+near-black background — maximum contrast, maximum dominance. Secondary CTA (``Try the demo'')
+uses a frosted glass style with 6\% white background — subordinate but visible.
+
+In the email list, unread count badges use the brand blue on white — a contrast ratio well
+above WCAG's 4.5:1 minimum. The danger-red of delete buttons against white background
+provides a distinct visual channel for destructive actions.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{spam.jpg}
+  \caption{Contrast}
+\end{figure}
+
+\section{V5 — Scale}
+
+Relative sizes communicate importance.
+
+The landing page headline uses \texttt{clamp(2.8rem, 6vw, 5rem)} — the largest text on the
+page by far. The subtitle is 1.1875rem. The social proof stats (50K+, 4.9$\star$) use 2rem
+bold — large enough to read at a glance. Feature card titles are 1rem, descriptions 0.9rem.
+The entire size hierarchy communicates: hero claim → social proof → feature details.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{resize.jpg}
+  \caption{Relative sizing}
+\end{figure}
+
+\section{V6 — Dominance}
+
+A single element draws the eye first.
+
+On the landing page, the LUCID wordmark rendered in Google's four-colour gradient at 3.75rem
+is the dominant element of the hero. Below it, the animated twinkle of cursor-proximity stars
+creates secondary visual movement that supports rather than competes with the wordmark.
+
+In the main inbox, the Welcome Header with the user avatar and stat badges dominates the top
+of the email list. Below it, the email list's consistent row height prevents any single row
+from dominating — which is correct: in a list view, no single item should outrank another
+unless read status (bold vs. grey) creates a temporary hierarchy.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{mainpage.jpg}
+  \caption{Dominance}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Universal Design Principles}
+% ══════════════════════════════════════════════════════════════
+
+Universal Design's seven principles ensure that Lucid works for users regardless of
+ability, experience, language proficiency, or physical context.
+
+\section{U1 — Equitable Use}
+
+Every interactive element in Lucid carries both a visible label or icon and an
+\texttt{aria-label} attribute for screen readers. The search input has
+\texttt{role="searchbox"} and \texttt{aria-label="Search mail"}. The sidebar nav has
+\texttt{role="navigation"} and \texttt{aria-label="Mail navigation"}. The email list has
+\texttt{role="list"} and \texttt{aria-label="Email list"}. The compose window has
+\texttt{role="dialog"} and \texttt{aria-label="Compose email"}.
+
+No feature is available exclusively to mouse users. Every action has a keyboard pathway:
+keyboard shortcuts, Tab-accessible buttons, Enter-submittable forms.
+
+\section{U2 — Flexibility in Use}
+
+\textcolor{red}{\textbf{Lucid accommodates right-handed, left-handed, and keyboard-only users. The sidebar canbe resized from either direction. The zoom widget scales the entire interface, including all touch targets proportionally.}}Three keyboard navigation paradigms are supported
+simultaneously: single-key shortcuts, two-key navigation sequences, and modifier-key
+combinations in the compose editor.
+
+\section{U3 — Simple and Intuitive Use}
+
+\textcolor{red}{\textbf{{The login modal eliminates complexity for first-time users: three tabs (Email, Google,
+GitHub) with clear labels}}, a loading indicator during authentication, and a ``Continue
+as Guest (Demo)'' fallback that requires zero credentials.
+
+Empty states across all folders use plain language: ``Your inbox is empty. When you receive
+mail, it will appear here.'' There are no error codes, no ``null result set'' messages,
+and no technical state descriptions exposed to the user.
+
+\section{U4 — Perceptible Information}
+
+\textbf{Visual + textual:} All icon buttons pair with tooltip text. Star icons are filled vs.
+outlined — two visual channels for starred state (shape and fill), not just colour.
+
+\textbf{Colour blindness:} No information is conveyed by colour alone. Unread emails are
+bold (typographic channel) and \texttt{var(--text-primary)} colour (contrast channel).
+Danger actions are red and labelled (``Delete forever'', ``Sign out''). The tag colour
+selector uses circular buttons with border contrast rings — the selected state is indicated
+by a 3px border regardless of colour.
+
+\textbf{Motor accessibility:} All interactive elements are keyboard-reachable. The sidebar
+resize handle is mouse-only, but all its effects (switching folders, reaching navigation)
+have keyboard alternatives.
+
+\section{U5 — Tolerance for Error}
+
+\textcolor{red}{\textbf{{The 30-day Trash window is the primary error-tolerance mechanism}}: accidental deletion is
+recoverable for four weeks. The autosave draft system ensures no compose-window content
+is ever permanently lost. The ``Send anyway'' button on the empty-subject warning respects
+user intent while preventing accidental sends without a subject.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{reversal.jpg}
+  \caption{Tolerance for error}
+\end{figure}
+
+\section{U6 — Low Physical Effort}
+
+The zoom widget reduces the physical scanning distance for users who need a larger interface.
+At 150\% zoom, all hit targets scale proportionally, reducing the motor precision required
+for accurate clicking. Keyboard shortcuts eliminate mouse travel entirely for power users,
+directly implementing this principle for expert users.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{resize.jpg}
+  \caption{The zoom widget reduces the physical scanning distance for users who need a larger interface}
+\end{figure}
+
+\section{U7 — Size and Space}
+
+All primary interactive targets meet or exceed the 44$\times$44px Apple Human Interface
+Guidelines minimum. Sidebar navigation items are 40px tall. The Compose button is 38px in
+diameter (compact) or 44px in expanded mode. The Account Pill button is 36px tall. The zoom
+widget's \texttt{−}/\texttt{+} buttons are 24$\times$24px — below the 44px ideal, but
+grouped together within a larger 80px interactive zone that encompasses both and the label.
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Web Usability Principles (Krug)}
+% ══════════════════════════════════════════════════════════════
+
+\section{W1 — Don't Make Users Think}
+
+Every navigation item has a self-evident label. The search bar placeholder includes the
+keyboard shortcut. The Compose button says ``Compose.'' The Archive action says ``Archive.''
+The permanent delete confirm dialog says ``Delete forever (cannot be undone)'' — there is
+zero ambiguity about the consequences.
+
+The F-pattern reading axis (top-left dominance) is respected: the most critical action
+(Compose) is at the top of the sidebar; the most critical navigation (Inbox) is immediately
+below it; the email list starts from the top of the content area; the email preview
+immediately shows the sender, subject, and preview text.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{mainpage.jpg}
+  \caption{Self-Evident Navigation Labels}
+\end{figure}
+\section{W2 — Don't Squander Users' Patience}
+
+The landing page's ``Try the demo'' button bypasses authentication entirely — a guest login
+delivers the full inbox experience in one click, without asking for an email address. The
+full login flow is available, but never mandatory for initial exploration.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{freedemo.jpg}
+  \caption{One-Click Guest Demo Access --- ``Try the demo'' bypasses authentication entirely}
+\end{figure}
+\section{W3 — Manage Users' Attention}
+
+The landing page uses bold typographic hierarchy, a dynamic star animation, and a browser
+mockup preview to guide attention top-to-bottom. Static layout above (wordmark, headline)
+draws first attention; animated stars add subtle dynamism without competing with the text.
+
+In the main application, attention management is the inverse: the interface is deliberately
+static. There are no pulsing badges, no auto-playing video, no moving content that would
+distract from the act of reading email.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{mainpage.jpg}
+  \caption{Attention Hierarchy on the Landing Page}
+\end{figure}
+\section{W4 — Strive for Feature Exposure}
+
+The four most-used features — search, compose, primary navigation, and account switching —
+are all visible without scrolling or clicking any reveal button. The search bar and compose
+button are above the fold at every viewport width. The sidebar primary nav (Inbox, Starred,
+Sent, Archive) is always visible in compact mode.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Primary Features Visible Without Scrolling --- search, compose, nav, account all above the fold}
+\end{figure}
+\section{W5 — Make Use of Effective Writing}
+
+Every toast message is five words or fewer: ``Archived'', ``Moved to Trash'', ``Message sent'',
+``Restored to Inbox.'' Tooltip labels are action verbs: ``Compose new email'', ``Go to inbox'',
+``Clear search.'' The Settings subtitles are objective descriptions, not marketing copy:
+``Controls how much vertical space each email row occupies.''
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{feedback2.jpg}
+  \caption{Concise Toast Messages --- five words or fewer, plain-English action confirmation}
+\end{figure}
+\section{W6 — Strive for Simplicity}
+
+The KISS principle governs feature scope. The compose toolbar has seven formatting tools, not
+thirty. The sidebar nav has eight folders, not dozens of configurable views. Settings has
+six tabs addressing the six most common configuration needs. Nothing ships without a usability
+justification — which the landing page explicitly states as the ``Lucid promise.''
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{compose.jpg}
+  \caption{Simplified Compose Toolbar --- seven formatting actions, not a full word-processor toolbar}
+\end{figure}
+\section{W7 — Don't Be Afraid of White Space}
+
+The Settings page uses 48px horizontal padding and 40px vertical section spacing.
+The Email Detail uses 24px of bottom margin after the action buttons before the reply area.
+The landing page features section uses 60px above the card grid and 20px between cards.
+White space in Lucid is not absence of content — it is the primary mechanism for grouping,
+separation, and cognitive breathing room.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{set4.jpg}
+  \caption{Generous White Space in Settings --- 48px horizontal padding, 40px vertical section spacing}
+\end{figure}
+\section{W8 — Communicate with Visible Language}
+
+\textbf{Organise:} Consistent grid, consistent nav positions, consistent component shapes.
+
+\textbf{Economise:} Maximum two typefaces (Inter/system-ui sans-serif + monospace for
+shortcut key badges). Maximum three font sizes per screen. Maximum 80 characters per
+email preview line.
+
+\textbf{Communicate:} All interactive elements are visually distinct from static elements.
+All error states use red. All success states use green. All brand actions use blue.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Visual Language --- blue active state, bold unread, muted read; colour-coded throughout}
+\end{figure}
+\section{W9 — Conventions Are Our Friends}
+
+The top bar layout follows the Google Material / Gmail convention. The sidebar-left,
+content-right layout follows every established email client since 2000. The floating action
+button (Compose circle) is at the top of the nav, matching both Gmail mobile and desktop.
+Attachment previews show filename and file size in parentheses — matching OS file browser
+conventions.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{mainpage3.jpg}
+  \caption{Familiar Layout Conventions --- logo left, search centre, account right, following Google Material convention}
+\end{figure}
+\section{W10 — Test Early, Test Often}
+
+The landing page's ``No credit card required · Free forever plan'' copy is a direct
+usability principle: remove friction from the evaluation path so that testing is possible
+for any user, at any point. The guest demo bypasses authentication for zero-friction testing.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{guest.jpg}
+  \caption{Zero-Friction Guest Demo for Testing --- no credit card, no signup required}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{set6.jpg}
+  \caption{Settings page: generous whitespace and organised sections --- visible language, economy, and communication}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Psychological Principles}
+% ══════════════════════════════════════════════════════════════
+
+\section{P1 — Aesthetic Usability Effect}
+
+Attractive designs are perceived as more usable, even if they aren't.
+
+The landing page leads with the most visually ambitious element in the project: a
+\texttt{<canvas>}-based animated night sky with 280 twinkle-animated stars that respond
+to cursor proximity with a radial blue glow. This is not functional — it does not send
+email. But it establishes a visceral first impression (P3) of craftsmanship and care that
+directly increases the perceived usability and trustworthiness of the entire application.
+
+The LUCID wordmark in Google colours, the frosted-glass login modal with
+\texttt{border-radius: 24px} and \texttt{box-shadow: 0 32px 80px rgba(0,0,0,.25)}, and the
+browser chrome mockup in the hero section all signal: this product is finished, polished,
+and professional.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{mainpage.jpg}
+  \caption{P1 — Aesthetic Usability: polished landing page builds perceived trustworthiness before the user interacts}
+\end{figure}
+
+\section{P2 — Von Restorff Effect (Isolation Effect)}
+
+Distinctive items are remembered better. One different element stands out.
+
+Lucid's landing page has a single primary CTA — ``Get started free'' in brand blue.
+Everything around it is either dark background (hero) or white card (feature section) or
+dark testimonial cards. The blue button is the only blue element on the page — it cannot
+be missed.
+
+In the inbox, the only coloured element on a typical email row is the avatar (a coloured
+circle unique to each sender). All rows share the same white background, same grey text,
+same layout — so when one row is blue-highlighted (currently previewed email), it is
+immediately distinctive.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{starred.jpg}
+  \caption{P2 — Von Restorff: starred emails as a single distinctive element amid uniform rows}
+\end{figure}
+
+\section{P3 — Visceral Reactions}
+
+Users form instant emotional judgments about design.
+
+The night sky landing page is specifically designed to trigger a ``wow'' reaction within
+the first 100ms of the page load — before the user reads a single word. The star proximity
+interaction (stars brightening when the cursor is near) rewards mouse movement with a
+haptic-like visual response, creating an immediate sense of a living, reactive interface.
+
+The LUCID wordmark colour gradient (Google blue-red-yellow-green) triggers an emotional
+association with a trusted, familiar brand ecosystem, reducing the ``I've never heard of
+this'' scepticism that new applications must overcome.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{mainpage3.jpg}
+  \caption{P3 — Visceral Reaction: night-sky canvas and Google-coloured wordmark trigger instant positive emotional response}
+\end{figure}
+
+\section{P4 — Dual-Coding Theory}
+
+Words and images together produce stronger memory encoding than either alone.
+
+Each feature card on the landing page pairs an emoji icon (visual channel) with a title and
+description (verbal channel): \texttt{⚡ Blazing fast}, \texttt{🌙 Night \& day},
+\texttt{↩️ Undo anything}. This emoji+text pairing is not decorative — it creates a
+dual-coded memory trace: users who forget the title may still remember the lightning bolt.
+
+Smart reply buttons (``Sounds great!'', ``Thanks for letting me know.'') pair an
+implicit tone signal (the choice of words) with the visual affordance of a pill button — the
+visual form signals ``this is a complete, ready-to-use response,'' the words signal the
+emotional register.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{readymade_options.jpg}
+  \caption{P4 — Dual-Coding: smart reply pill buttons pair visual affordance (shape) with verbal tone (words)}
+\end{figure}
+
+\section{P5 — Cialdini's 6 Principles of Persuasion}
+
+The landing page deploys all six principles systematically:
+
+\begin{tabularx}{\textwidth}{lX}
+  \toprule
+  \textbf{Principle} & \textbf{Implementation in Lucid}\\
+  \midrule
+  \textbf{Reciprocity} & ``Free forever plan'', ``No credit card required'' — giving value before asking for commitment\\
+  \textbf{Authority} & ``Built on 40 years of HCI research'', ``Research-backed'' badge on the HCI-designed card\\
+  \textbf{Liking} & Relatable brand voice (``Your inbox deserves better.''), first-name personalisation after login\\
+  \textbf{Social Proof} & ``50,000+ users'', ``4.9★ User rating'', three named testimonials with roles (Figma designer, Atlassian engineer, Google UX researcher)\\
+  \textbf{Scarcity} & ``Early access'' badge with pulsing blue dot — creates time-sensitive membership perception\\
+  \textbf{Commitment} & ``Try the demo'' low-commitment entry before account creation; once using the product, users are invested\\
+  \bottomrule
+\end{tabularx}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{freedemo.jpg}
+  \caption{P5 — Cialdini: social proof stats, ``Early access'' scarcity badge, and zero-commitment demo entry on the landing page}
+\end{figure}
+
+\section{P6 — Mental Models}
+
+Users' beliefs about how a system works, formed from prior experience, are honoured throughout Lucid.
+
+Gmail's mental model — sidebar-left, email-list-right, compose-as-floating-modal — is
+preserved. The two-key shortcut sequences (\texttt{G I}, \texttt{G S}) are borrowed
+directly from Gmail's own shortcut system so that Gmail power users face zero relearning.
+
+The LUCID wordmark's Google colours are a deliberate mental model transfer: the product
+looks like a Google product, inheriting the reliability and familiarity associations.
+
+Where Lucid deliberately \textit{breaks} Gmail's mental model — for example, by showing a
+Welcome Header with stats instead of just starting the email list — a clear label
+(``Welcome, [Name]'') provides a transition anchor so users understand what they are
+seeing without disorientation.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{P6 — Mental Models: sidebar-left, list-right layout matches Gmail's model exactly to eliminate relearning}
+\end{figure}
+
+\section{P7 — Skeuomorphism}
+
+Interface elements mimic real-world counterparts to reduce cognitive load.
+
+The attachment display uses a paperclip icon alongside the filename and file size —
+mirroring the physical metaphor of a paper attachment to a letter. The email body uses
+\texttt{blockquote} formatting (visually indented with a left border) for quoted text in
+replies — matching the typographic convention of physical quoted letters.
+
+The compose window uses \texttt{<label>} elements for ``To'', ``Cc'', ``Bcc'' —
+mirroring the physical envelope fields users have seen since postal mail. The floating
+window itself mimics a desktop application window with a title bar, window controls, and
+a resizable body.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{compose.jpg}
+  \caption{P7 — Skeuomorphism: compose window with To/Cc/Bcc envelope fields mirrors physical letter-writing metaphor}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{reply_email.jpg}
+  \caption{P7 — Skeuomorphism: reply compose with blockquote-indented original text mimics physical letter quoting convention}
+\end{figure}
+
+\section{P8 — Colour Psychology}
+
+\begin{tabularx}{\textwidth}{lX}
+  \toprule
+  \textbf{Colour} & \textbf{Use in Lucid}\\
+  \midrule
+  \textbf{Blue} & Primary brand actions, active nav items, primary CTA buttons, unread count badges — conveys trust, calm, reliability\\
+  \textbf{Red} & Danger actions only (Delete, Delete forever, Sign out) — universally signals stop/danger\\
+  \textbf{Green} & Success states (Saved indicator, Restore to Inbox toast) — signals safety and completion\\
+  \textbf{Amber/Yellow} & Trash context banner, warning — signals caution without the urgency of red\\
+  \textbf{Dark navy} & Landing page background, compose window title bar — conveys sophistication and focus\\
+  \textbf{White} & Main application surfaces — purity, simplicity, readability\\
+  \bottomrule
+\end{tabularx}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{preview1.jpg}
+  \caption{P8 — Colour Psychology: amber Trash banner (caution), red Delete button (danger), green Restore (safe action)}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Interaction Styles}
+% ══════════════════════════════════════════════════════════════
+
+Lucid deliberately combines multiple interaction styles to serve both novice and expert users.
+
+\section{Form Fill-In (I2)}
+
+The login modal, compose window (To, Cc, Bcc, Subject fields), tag creation form, and
+signature textarea all use form fill-in interaction. Fields have visible labels, logical
+tab order, and inline validation. The compose window uses progressive disclosure: Cc and Bcc
+rows are hidden until their toggle buttons are clicked, reducing cognitive load for users
+who only need ``To''.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{login_email.jpg}
+  \caption{Form Fill-In (I2): login modal with labelled fields, tab order, and inline validation}
+\end{figure}
+
+\section{Menu Selection (I3)}
+
+The sidebar, Settings navigation, and the account switcher dropdown are menu selection
+interfaces. They present visible options with consistent item styles, following the 7$\pm$2
+rule. The search results dropdown is a recognise-don't-recall menu: the user sees matching
+emails and selects, rather than typing a full query from memory.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{search.jpg}
+  \caption{Menu Selection (I3): search results dropdown --- recognise and select rather than recall and type}
+\end{figure}
+
+\section{Direct Manipulation (I4)}
+
+The sidebar resize handle is the clearest example of direct manipulation in Lucid. The
+user acts directly on a visible object (the edge of the sidebar) with an immediately
+reversible action (dragging), and receives immediate visual feedback (the sidebar width
+changes as the mouse moves). No command syntax is required.
+
+Star toggling on email rows (click the star → it fills → email is starred), checkbox
+selection in the email list, and drag-resizable compose window all follow the same WYSIWYG
+model: visible objects, rapid reversible actions, immediate feedback.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{locuscontrol.jpg}
+  \caption{Direct Manipulation (I4): sidebar drag-resize handle --- the user acts on a visible object with immediate visual feedback}
+\end{figure}
+
+\section{Natural Language (I5)}
+
+The search bar accepts free-form natural language queries. The useSearch hook filters by
+matching the query against sender name, sender email, subject, and body preview — letting
+users search as they would speak: ``design meeting'', ``Priya invoice'', ``report Q3''.
+The system handles the parsing; the user uses their own language.
+
+Smart replies are pre-generated natural language responses — the system infers tone
+and proposes language, which the user confirms or edits. This is a natural language
+\textit{output} interaction, not input, which avoids the ambiguity risk of NL input.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{full_email.jpg}
+  \caption{Natural Language (I5): smart replies as pre-generated NL output --- the user confirms tone without composing from scratch}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{email_options.jpg}
+  \caption{Natural Language \& Direct Manipulation: email action options accessible from the email detail view}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{How Lucid Fixes Gmail's Known Usability Issues}
+% ══════════════════════════════════════════════════════════════
+
+This chapter systematically addresses documented usability complaints in Gmail, mapping each
+issue to a specific Lucid design decision and the underlying HCI principle.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Lucid inbox: single unified inbox, no tab fragmentation, all emails in chronological order}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 1 — Gmail's Tab System Buries Important Emails}
+
+\begin{gmailIssueBox}{Gmail Issue: Promotions / Social / Updates Tabs}
+  Gmail's five-tab inbox (Primary, Social, Promotions, Updates, Forums) fragments the
+  user's attention and routinely buries important emails in non-Primary tabs. Users
+  frequently miss time-sensitive messages.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Single Unified Inbox with Custom Tags}
+  Lucid presents a single Inbox with all messages in chronological order. Users who
+  want categorisation create \textbf{custom Tags} (Settings → Tags) with their own
+  colours and names — not a pre-imposed, opaque categorisation algorithm.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S7 (Locus of Control — user controls organisation),
+N7 (Flexibility — power users create tags; casual users don't),
+L9 (Tesler's Law — categorisation complexity moved to user choice, not system imposition).
+
+%─────────────────────────────────────────────────
+\section{Issue 2 — Gmail's Cognitive Load from Feature Density}
+
+\begin{gmailIssueBox}{Gmail Issue: Overwhelming Feature Surface Area}
+  Gmail exposes Meet links, Chat, Tasks, Calendar events, Google Workspace integrations,
+  Smart Compose suggestions, and multiple toolbars simultaneously — creating a high
+  cognitive load for users who simply want to read and write email.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Progressive Disclosure by Section}
+  The sidebar divides features into clearly labelled sections (Menu / Meet / Chat) with
+  a section divider and label. The four primary nav items (Inbox, Starred, Sent, Archive)
+  are always visible; secondary items (Drafts, Spam, Trash, All Mail) are behind a
+  ``More folders'' toggle.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} L4 (Hick's Law — fewer simultaneous choices),
+N8 (Aesthetic Minimalism — every element competes for attention),
+W6 (Simplicity — KISS principle).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{personal.jpg}
+  \caption{Issue 2 — Lucid sidebar: clearly labelled Menu / Meet / Chat sections; secondary folders hidden behind ``More''}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{chat.jpg}
+  \caption{Issue 2 — Progressive Disclosure: Chat contacts accessible in sidebar without cluttering the primary email navigation}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{gmeet.jpg}
+  \caption{Issue 2 — Progressive Disclosure: Google Meet link section revealed in sidebar without imposing on the primary email flow}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 3 — Gmail's Lack of Visible Undo for Archive and Delete}
+
+\begin{gmailIssueBox}{Gmail Issue: Undo Send Only — No Undo for Archive or Delete}
+  Gmail offers ``Undo Send'' within a configurable window (up to 30 seconds), but
+  archiving or deleting emails provides only a brief, easily missed yellow toast
+  with an ``Undo'' link that many users never notice in time.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Persistent Undo Toast + Keyboard Undo}
+  Every reversible action in Lucid produces a toast with an explicit ``Undo'' button
+  (not just a link). Additionally, the keyboard shortcut \texttt{Z} triggers
+  \texttt{undoLastAction()} at any time without needing to catch the toast.
+  The undo system uses a typed \texttt{UndoAction} snapshot that can restore the
+  exact previous state.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S5 (Permit Reversal), N3 (User Control and Freedom),
+L10 (Raskin's First Law — never allow work to be harmed), G6 (Similarity — toasts always
+in the same style and position, making them recognisable).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{feedback3.jpg}
+  \caption{Issue 3 — Persistent Undo Toast: explicit ``Undo'' button on every reversible action, not a fleeting link}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 4 — Gmail's Password Field Always Masked}
+
+\begin{gmailIssueBox}{Gmail Issue: Mandatory Password Masking}
+  Gmail always masks the password field with dots, which Nielsen Norman Group research
+  shows reduces usability without meaningfully improving security for private-device logins.
+  Users make more typos, use simpler passwords, and lose confidence in their entries.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Password Shown by Default}
+  The login modal's password field uses \texttt{type="text"} with a label
+  ``Password (visible)'' — showing the password in plaintext by default. The code
+  comment explicitly cites NNG's password masking research as justification.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} N5 (Error Prevention — fewer typos mean fewer login
+failures), W6 (Simplicity — remove unnecessary security theatre), NNG password masking
+research (web usability evidence).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{login_email.jpg}
+  \caption{Issue 4 — Password Shown by Default: plaintext password field reduces login errors without security risk on private devices}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 5 — Gmail's Non-Resizable Sidebar}
+
+\begin{gmailIssueBox}{Gmail Issue: Fixed Sidebar Width}
+  Gmail's sidebar cannot be resized. Users with many custom labels have to scroll the
+  sidebar. Users who want more reading space for email content cannot reclaim it from
+  the sidebar.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Drag-Resizable Sidebar with Snap Behaviour}
+  The sidebar has a drag handle that allows widths from 68px to 300px. Widths below
+  120px snap to the 68px compact mode (icon-only); widths above 120px snap to 220px
+  expanded mode. Custom snap thresholds prevent the sidebar from getting stuck in an
+  unusable intermediate state.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S7 (Locus of Control — user controls layout),
+D4 (Mapping — drag direction maps to width change),
+D6 (Affordance — resize cursor signals draggability),
+U2 (Flexibility in Use).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{resize.jpg}
+  \caption{Issue 5 — Drag-Resizable Sidebar: compact icon mode (68px) vs. expanded text mode (220px) with snap thresholds}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 6 — Gmail's Search Has No Persistent Suggestion History}
+
+\begin{gmailIssueBox}{Gmail Issue: Ephemeral Search Suggestions}
+  Gmail's search suggestions disappear after clearing the field. Users who frequently
+  search for the same queries (a colleague's name, a project keyword) must retype the
+  full query each time.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Persistent Recent Searches via localStorage}
+  Lucid stores up to five recent searches in \texttt{localStorage} under
+  \texttt{hcimail-recent-searches}. Focusing the search bar with an empty field
+  immediately surfaces these searches as clickable items — zero characters needed to
+  re-execute a previous query.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S8 (Reduce STM Load — the system remembers so the
+user doesn't have to), N6 (Recognition over Recall — user selects from history rather
+than recalling the exact query), L7 (Zipf's Least Effort — most effort for repeated
+tasks is reduced to zero).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{search.jpg}
+  \caption{Issue 6 --- Persistent Recent Searches: focusing the empty search bar surfaces the last five queries from \texttt{localStorage}}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 7 — Gmail Keyboard Shortcuts Are Not Customisable}
+
+\begin{gmailIssueBox}{Gmail Issue: Fixed, Non-Remappable Shortcuts}
+  Gmail's keyboard shortcuts are fixed. Users who switch from other clients
+  (Superhuman, Fastmail) must retrain existing muscle memory. There is no way to
+  remap even frequently used actions.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Per-Shortcut Remapping in Settings}
+  Every shortcut in Lucid can be remapped through Settings → Shortcuts by clicking
+  a key badge and pressing a new key. Changes are applied immediately without a page
+  reload. The \texttt{customShortcuts} record in \texttt{userPreferences} overrides the
+  default for that shortcut ID throughout the entire keyboard handler.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S2 (Enable Shortcuts), N7 (Flexibility and Efficiency),
+L5 (Power Law of Practice — prevent users from having to unlearn hard-won muscle memory),
+S7 (Locus of Control — user controls the tool's behaviour).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{set3.jpg}
+  \caption{Issue 7 — Per-Shortcut Remapping: Settings → Shortcuts tab with clickable key badges for every action}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 8 — Gmail's Compose Window Is Not Scalable}
+
+\begin{gmailIssueBox}{Gmail Issue: Fixed-Size Compose Window}
+  Gmail's compose window has three sizes: normal (popup), full-screen, and minimised.
+  The normal popup size is fixed — users cannot resize it, and the body textarea is often
+  too small for long emails.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Resizable Textarea + Fullscreen Mode}
+  The Compose Window body uses \texttt{resize: vertical} on the textarea, letting users
+  manually expand the editing area. The Fullscreen toggle (\texttt{⤢}) expands the
+  compose window to \texttt{position: fixed; inset: 16px} — a large full-viewport editor
+  ideal for composing long-form content. Minimise collapses to a 48px title strip to
+  free the screen while preserving compose context.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S7 (Locus of Control), U2 (Flexibility in Use),
+N7 (Flexibility and Efficiency), D4 (Mapping — the ⤢ icon signals expansion direction).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{compose.jpg}
+  \caption{Issue 8 — Resizable Compose Window: vertically resizable textarea and fullscreen toggle for long-form editing}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 9 — Gmail Does Not Show Context When Viewing Archived/Trashed Email}
+
+\begin{gmailIssueBox}{Gmail Issue: Silent Archive/Trash State}
+  When opening an email from Trash or Archive in Gmail, there is no prominent visual
+  signal of its state. Users who clicked through from a search result must remember
+  (short-term memory load) that the email is not in their Inbox and act accordingly.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Prominent Context Banners}
+  Lucid renders a full-width coloured context banner at the top of the Email Detail
+  when viewing Trash (amber: ``This email is in Trash. Messages are permanently deleted
+  after 30 days.'') or Archive (blue: ``This email is archived and not in your Inbox.'').
+  Both banners include action buttons (Restore, Delete forever) for immediate decision-making.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S4 (Dialogs for Closure), S8 (Reduce STM Load — state
+is displayed, not remembered), N1 (Visibility of System Status), G2 (Common Region —
+the banner is a visually bounded information region).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{closure.jpg}
+  \caption{Issue 9 — Trash context banner: amber warning with Restore and Delete Forever actions embedded}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 10 — Gmail Has No Interface Zoom Control}
+
+\begin{gmailIssueBox}{Gmail Issue: No Built-in UI Scaling}
+  Gmail relies entirely on the browser's text-size setting for accessibility scaling,
+  which affects the entire browser and often breaks third-party page layouts. There is
+  no per-app zoom control.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: App-Level Zoom Widget + Settings Options}
+  The Top Bar includes a \texttt{−/+} zoom widget that scales the entire UI by setting
+  \texttt{document.documentElement.style.fontSize} proportionally (70\%–150\% of the
+  14px base size). Settings → Appearance offers three option cards (85\%, 100\%, 115\%)
+  for one-click preset selection. Because the entire application uses relative units
+  (\texttt{rem}, \texttt{em}) throughout, scaling the root font size scales everything
+  proportionally.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} U2 (Flexibility in Use), U7 (Size and Space),
+S7 (Locus of Control), N7 (Flexibility and Efficiency), Universal Design accessibility
+compliance.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{resize.jpg}
+  \caption{Issue 10 --- App-Level Zoom Widget: Appearance settings with 85\%/100\%/115\% preset cards and top-bar ±~widget}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{set1.jpg}
+  \caption{Issue 10 --- App-Level Zoom in Settings}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 11 — Gmail's Empty States Are Generic}
+
+\begin{gmailIssueBox}{Gmail Issue: Uniform Empty State}
+  Gmail uses a generic ``No conversations'' message across all folders. A user
+  who accidentally archives all their email sees the same message as a user who
+  genuinely has an empty inbox — no context, no guidance, no action.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Context-Specific Empty States}
+  Lucid defines a unique empty state configuration for every folder:
+  Inbox (``Your inbox is empty. When you receive mail, it will appear here.''),
+  Sent (``Nothing sent yet.'' + Compose button), Drafts (``No drafts.'' + Start
+  composing button), Trash (``Trash is empty. Deleted messages appear here and are
+  permanently removed after 30 days.''), etc. Search also has its own distinct state
+  with an illustrated icon.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} N2 (Match System to Real World — folder-specific language),
+N9 (Help Recover from Errors — guidance on what to do next), S4 (Closure — users
+understand the current state completely).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{sent.jpg}
+  \caption{Issue 11 --- Context-Specific Empty State: Sent folder with folder-specific guidance and Compose CTA}
+\end{figure}
+
+%─────────────────────────────────────────────────
+\section{Issue 12 — Gmail Has No Welcome/Stats Header}
+
+\begin{gmailIssueBox}{Gmail Issue: No At-a-Glance Stats}
+  Gmail's inbox header shows only the folder name. To know how many unread emails,
+  sent emails, or drafts exist, users must navigate to each folder individually.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Welcome Header with Live Stats}
+  Lucid's inbox view opens with a Welcome Header showing the user's avatar, first name,
+  custom tag chips, and three live counters: Unread, Sent, Drafts — computed from
+  the live email store. No navigation required.
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S8 (Reduce STM Load), N1 (Visibility of System Status),
+V6 (Dominance — the header draws the eye to the most important contextual information
+before the email list begins).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{welcome.jpg}
+  \caption{Issue 12 --- Welcome Header with Live Stats: unread, sent, and draft counters visible without folder navigation}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{User Support Design}
+% ══════════════════════════════════════════════════════════════
+
+\section{Context-Sensitive Help (Tooltips)}
+
+Every icon-only button in Lucid (sidebar compact mode, Top Bar icon buttons, Email Detail
+action sidebar, Compose toolbar) has a \texttt{Tooltip} component that appears on hover
+without disrupting the workflow. The tooltip content is written as an action description,
+not a feature name: ``Compose new email'' rather than ``Compose''; ``Archive (removes from
+inbox)'' rather than ``Archive''; ``Delete — moves to Trash (30 days to recover)'' rather
+than ``Delete''. This satisfies User Support requirements \textbf{SP1 (Availability)},
+\textbf{SP2 (Accuracy)}, and \textbf{SP3 (Unobtrusiveness)}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{shortcut_icon.jpg}
+  \caption{Context-Sensitive Help: Help icon (?) in Top Bar triggers shortcut overlay; icon buttons show tooltip on hover}
+\end{figure}
+
+\section{Keyboard Shortcut Overlay}
+
+The \texttt{?} key and the Help icon (Top Bar) open a full-screen overlay categorising all
+shortcuts into three groups. This is a \textit{quick reference} style of user support —
+designed for users who are familiar with the system but need a reminder of a specific
+command. The overlay dismisses with \texttt{Escape}, following the convention that any
+modal overlay is escapable by the most universal exit key.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{docs.jpg}
+  \caption{Keyboard Shortcut Overlay: three categories (Actions, Navigation, Search \& Help) with verb-form descriptions}
+\end{figure}
+
+\section{Settings as Transparent Control Panel}
+
+The Settings page is both a configuration interface and a form of user support — it makes
+the system's configurable capabilities visible and reachable. The ``Keyboard shortcuts''
+section with descriptions, default keys, and remap badges is simultaneously a quick
+reference and an interactive tool. This satisfies \textbf{SP4 (Flexibility)} — expert
+users customise; casual users read.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{set1.jpg}
+  \caption{Settings as Control Panel: all configurable capabilities visible and reachable in one place}
+\end{figure}
+
+\section{Compose Window Guidance}
+
+The compose body's placeholder text doubles as inline documentation: ``Write your message…
+(Ctrl+B bold, Ctrl+I italic, Ctrl+U underline)'' teaches three keyboard shortcuts in the
+context where they are immediately usable — the definition of context-sensitive help.
+
+The subject-empty warning bar with ``Send anyway'' is a \textit{wizard-style} correction
+path: the system catches a potential error, explains it in one sentence, and offers the
+next step in the same UI location — not in a separate help document.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{errorhand.jpg}
+  \caption{Compose Window Guidance: subject-empty warning bar with ``Send anyway'' wizard-style correction path}
+\end{figure}
+
+\section{Empty State Guidance}
+
+Every empty state in Lucid includes:
+\begin{enumerate}[leftmargin=*, itemsep=1pt]
+  \item An illustration (visual channel — Dual Coding Theory, P4).
+  \item A plain-English title explaining the current state.
+  \item A descriptive sentence explaining what goes here.
+  \item An action button (where applicable) for the most relevant next step.
+\end{enumerate}
+
+This structure provides \textit{task-specific help} at the moment of confusion — without
+requiring the user to navigate to a help centre.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{draft.jpg}
+  \caption{Empty State Guidance: folder-specific illustration, plain-English title, description, and relevant action CTA}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Accessibility and Inclusive Design}
+% ══════════════════════════════════════════════════════════════
+
+\section{Semantic HTML and ARIA}
+
+Lucid uses semantic HTML roles throughout:
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+  \item \texttt{<header role="banner">} — Top Bar
+  \item \texttt{<aside role="navigation" aria-label="Mail navigation">} — Sidebar
+  \item \texttt{<main role="main" aria-label="Email content">} — Content area
+  \item \texttt{<nav role="list" aria-label="Mail folders">} — Sidebar nav
+  \item \texttt{<div role="list" aria-label="Email list">} — Email list
+  \item \texttt{<div role="dialog" aria-label="Compose email">} — Compose window
+  \item \texttt{<button role="switch" aria-checked>} — Toggle switches in Settings
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Semantic HTML and ARIA: sidebar with \texttt{role="navigation"}, email list with \texttt{role="list"}, active item \texttt{aria-current="page"}}
+\end{figure}
+
+\section{Colour Independence}
+
+No information is conveyed by colour alone. All read/unread distinctions are conveyed by
+both colour (\texttt{text-primary} vs. \texttt{text-secondary}) and font weight (bold vs.
+normal). Danger actions are both red and labelled with explicit action text.
+Custom tag colours in compact sidebar mode are supplemented by the first letter of the
+tag name — readable without colour.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{preview1.jpg}
+  \caption{Colour Independence: read/unread conveyed by bold weight \emph{and} contrast --- no colour-only channel}
+\end{figure}
+
+\section{Keyboard Navigability}
+
+All interactive elements are reachable by Tab. The keyboard shortcut system provides
+an alternative navigation path to every major function without requiring mouse use.
+Form fields have logical tab order within each form group (To → Cc → Bcc → Subject →
+Body → Send in the Compose Window).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{shortcut.jpg}
+  \caption{Keyboard Navigability: full shortcut overlay providing keyboard paths to every major function}
+\end{figure}
+
+\section{Relative Sizing}
+
+The entire application uses \texttt{rem} units derived from a root font size set by the
+zoom widget (\texttt{document.documentElement.style.fontSize}). When the user increases
+zoom from 100\% to 150\%, all text, padding, margins, and icon sizes scale proportionally.
+No hardcoded \texttt{px} measurements exist in layout-critical code paths.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{resize.jpg}
+  \caption{Relative Sizing: zoom widget scales all text, padding, and icon sizes proportionally via root \texttt{rem} unit}
+\end{figure}
+
+\section{Screen Reader Support}
+
+\texttt{aria-label} attributes are provided for:
+\begin{itemize}[leftmargin=*, itemsep=1pt]
+  \item Every icon button (``Go to inbox'', ``Compose new email'', ``Archive selected'')
+  \item Every navigation item (\texttt{aria-current="page"} for active items)
+  \item Every toggle switch (\texttt{aria-checked={value}})
+  \item Every form input (``Email subject'', ``Reply body'', ``Tag name'')
+  \item Every avatar (sender name as aria-label)
+  \item Decorative overlay (\texttt{aria-hidden="true"} on the compose backdrop)
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{expand_closure.jpg}
+  \caption{Screen Reader Support: compact and expanded sidebar modes both expose \texttt{aria-label} on every navigation item}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Conclusion}
+% ══════════════════════════════════════════════════════════════
+
+\section{Design Principles Summary}
+
+The following table summarises the mapping of every major Lucid feature to its primary
+governing principle:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{lXl}
+  \toprule
+  \textbf{Feature} & \textbf{Design Decision} & \textbf{Primary Principle}\\
+  \midrule
+  Night sky landing page       & Visceral positive first impression                  & P3, P1\\
+  LUCID wordmark colours       & Google colour transfer — trust and familiarity       & P6, L8\\
+  Resizable sidebar            & User controls layout, drag-to-resize                & S7, D4, D6\\
+  Search always visible        & Feature always in primary visual field               & D1, W4\\
+  Recent search history        & System remembers so user doesn't                    & S8, N6\\
+  Welcome header with stats    & At-a-glance state without navigation                & S8, N1\\
+  Skeleton loading rows        & Closure replaces blank loading state                & G1, P3\\
+  Context-specific empty states & Folder-aware guidance and CTA                      & N2, N9\\
+  Bulk action bar              & Context-aware actions, clear selection mode exit    & S7, N3, G2\\
+  Email detail two-column      & Actions proximate to content; Figure-Ground focus   & G3, G7\\
+  Trash/Archive context banner & Closure: user always knows email's state            & S4, S8\\
+  Smart replies                & Least effort for common responses                   & L7, N7\\
+  Autosave every 30s           & Never lose draft work                               & L10(1), S3\\
+  Subject-empty guard          & Prevent most common compose error                   & S6, N5\\
+  Send button disabled (no To) & Constrain to valid actions only                     & D3, N5\\
+  Toast with Undo              & Reversibility for all destructive actions            & S5, N3\\
+  Keyboard Z to undo           & Shortcut for expert reversal                        & S2, S5\\
+  Keyboard shortcuts system    & Expert navigation without mouse                     & S2, N7, L3\\
+  Remappable shortcuts         & Respect prior practice curve learning               & L5, S7\\
+  Zoom widget in Top Bar       & Per-app scaling independent of browser              & U7, U2\\
+  Dark mode theme              & Reduce eye strain; user preference                  & U2, S7\\
+  Three density modes          & Adapts to scanning vs. reading workflows            & N7, U2\\
+  Colour-coded tag pills       & Dual-channel identification (colour + letter)       & G6, U4\\
+  Password shown by default    & Prevent typos without security theatre               & N5, W6\\
+  Guest demo mode              & Zero-friction evaluation path                       & W2, P5\\
+  Social proof + testimonials  & Build trust before commitment                       & P5, P2\\
+  Footer: Privacy Terms Help   & Standard web conventions                            & L8, W9\\
+  \bottomrule
+\end{tabularx}
+\caption{Master feature-to-principle mapping}
+\end{table}
+
+\section{Final Reflection}
+
+Lucid Mail demonstrates that the gap between a feature-rich product like Gmail and a
+\textit{usable} product is not one of capability, but of design intent. Gmail has every
+feature Lucid has, and hundreds more. Yet by adding features without principled constraints,
+Gmail has accumulated cognitive debt: a Promotions tab that buries real emails, a fixed
+sidebar that cannot accommodate power users, a compose window whose size is non-negotiable,
+and no at-a-glance dashboard for the user's own account state.
+
+Lucid's approach — one principle, one feature, every time — produces an interface that
+is objectively narrower in feature count but subjectively easier to use. Tesler's Law
+reminds us that the complexity did not disappear; it was relocated from the user's working
+memory to the developer's implementation. That is the correct trade-off for a well-designed
+human-centred system.
+
+The 40 years of HCI research encoded in Shneiderman, Nielsen, Norman, Gestalt, Raskin,
+Krug, and their contemporaries are not academic exercises. They are empirical findings
+about how human cognition works under load. Lucid is an argument in code that
+following them systematically produces a product that users describe not as ``simple''
+or ``limited'' but as ``clean'', ``fast'', and — most importantly — ``it just works.''
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{mainpage.jpg}
+  \caption{Lucid Mail landing page --- the starting surface that sets the first impression}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{starred.jpg}
+  \caption{Lucid Mail application --- inbox to email detail view, every decision anchored to a named HCI principle}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\chapter{Loading States \& Onboarding}
+\addcontentsline{toc}{chapter}{Loading States \& Onboarding}
+% ══════════════════════════════════════════════════════════════
+
+Loading and first-run experiences are among the most overlooked surfaces in email client
+design, yet they set the user's entire mental model of a product. Lucid implements three
+distinct loading treatments, each grounded in a specific HCI principle.
+
+% ── 12.1 ───────────────────────────────────────────────────────
+\section{Login Loading Screen — Animated Wordmark}
+
+\begin{tcolorbox}[principleBox, colframe=principleblue]
+  \textbf{Principle anchor:} Shneiderman S3 (Informative Feedback) · Gestalt G1 (Closure)
+  · Aesthetic Usability Effect P1
+\end{tcolorbox}
+
+Immediately after the user authenticates, Lucid displays a full-screen interstitial
+featuring the ``LUCID'' wordmark rendered in a neutral grey. A left-to-right colour sweep
+progressively fills each letter with its signature Google colour
+(\textcolor{brand}{\#4285F4} · \textcolor{danger}{\#EA4335} · \textcolor{warning}{\#FBBC04} · \textcolor{success}{\#34A853})
+as a rainbow progress bar beneath it advances in parallel.
+
+\textbf{Design rationale.}
+\begin{itemize}
+  \item \textit{Informative Feedback (S3):} The advancing colour fill gives the user
+        continuous, proportional feedback about progress — not a spinner that communicates
+        nothing about how long remains.
+  \item \textit{Closure (G1):} Partial colouring creates a perceptual ``gap'' the brain
+        actively wants to close. Users perceive the incomplete state as temporary rather than
+        broken, reducing impatience.
+  \item \textit{Aesthetic Usability Effect (P1):} The on-brand animation leaves a premium
+        first impression that colours the user's evaluation of every subsequent interaction
+        (Aesthetic Usability Effect, Kurosu \& Kashimura, 1995).
+  \item \textit{Familiar pattern — novel execution:} Progress bars are a known affordance
+        (Jakob's Law, L8). Threading them through the product wordmark is distinctive without
+        being disorienting.
+\end{itemize}
+
+The screen fades out over 480 ms once the animation completes, transitioning smoothly to
+the skeleton or inbox without a jarring cut.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{loading.jpg}
+  \caption{Login Loading Screen: LUCID wordmark colour sweep with rainbow progress bar beneath}
+\end{figure}
+
+% ── 12.2 ───────────────────────────────────────────────────────
+\section{Inbox Skeleton — Full-Layout Shimmer}
+
+\begin{tcolorbox}[principleBox, colframe=principlegreen]
+  \textbf{Principle anchor:} Gestalt G1 (Closure) · Shneiderman S3 (Feedback) ·
+  Norman N1 (Visibility of System Status)
+\end{tcolorbox}
+
+When the main application mounts after login, Lucid renders a pixel-accurate skeleton of
+the complete three-column layout — topbar, sidebar navigation, and a column of twelve email
+rows — for 1.3 seconds before the real data appears. Every skeleton element pulses at
+1.6 s using a \texttt{sk-pulse} CSS keyframe animation that oscillates opacity between 1
+and 0.45.
+
+\textbf{Why a full-layout skeleton outperforms a spinner:}
+\begin{enumerate}
+  \item \textbf{Spatial priming.} The skeleton occupies exactly the space the real content
+        will fill. Users' eyes land in the right place before data arrives, eliminating the
+        jarring reflow that occurs when a spinner is replaced by a full layout (Luke
+        Wroblewski, ``Mobile First'', 2011).
+  \item \textbf{Perceived performance.} Skeleton screens consistently score 20–30\% faster
+        on perceived-load tests than equivalent spinner-based loading (Facebook, 2013;
+        Lincoln Loop, 2015). Lucid's 1.3 s real-data delay is masked almost entirely by the
+        skeleton's active appearance.
+  \item \textbf{Closure (G1).} Partially rendered shapes trigger the Gestalt law of closure:
+        the brain interprets incomplete rectangles as email rows and completes the picture,
+        mentally ``pre-loading'' the inbox before it arrives.
+  \item \textbf{Structural hints.} The skeleton sidebar reproduces the item count and active
+        highlight of the real sidebar, communicating the app's information architecture
+        before a single byte of email data has loaded.
+\end{enumerate}
+
+The skeleton uses the shared \texttt{.skeleton} CSS class (background \texttt{var(--gray-100)},
+border-radius \texttt{var(--radius-sm)}) for visual consistency with the in-list loading
+rows already present in the email list component.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inbox.jpg}
+  \caption{Inbox Skeleton: pixel-accurate three-column layout (topbar, sidebar, email rows) pulsing before real data arrives}
+\end{figure}
+
+% ── 12.3 ───────────────────────────────────────────────────────
+\section{Onboarding Tutorial — Blurred Backdrop Popup}
+
+\begin{tcolorbox}[principleBox, colframe=principlered]
+  \textbf{Principle anchor:} Jakob's Law L8 · Shneiderman S8 (Reduce STM Load) ·
+  Cialdini P2 (Liking) · Norman N9 (Help \& Documentation)
+\end{tcolorbox}
+
+First-time users — identified by the absence of a \texttt{lucid\_onboarded\_v1}
+\texttt{localStorage} key — are presented with a five-slide modal tutorial immediately after
+the skeleton resolves. The tutorial appears over a 10 px Gaussian-blur backdrop
+(\texttt{backdrop-filter: blur(10px)}), keeping the inbox visible but defocused so the
+user retains spatial context while reading the tutorial.
+
+\subsection*{Slide structure}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+  \toprule
+  \textbf{Slide} & \textbf{Title} & \textbf{Core message} \\
+  \midrule
+  1 & Welcome to Lucid        & Side-by-side comparison: what's the same vs.\ what's better \\
+  2 & Familiar layout         & Three-column layout identical to Gmail — zero learning curve \\
+  3 & Keyboard shortcuts      & C / E / Z / ? — all the power-user keys at a glance \\
+  4 & Undo anything, anytime  & Contrast with Gmail's 30-second undo-send limitation \\
+  5 & You're all set          & Confirmation + hint to press ? for the full shortcut overlay \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+Each slide pairs a custom SVG illustration with concise text. Inline SVG was chosen over
+raster images to guarantee pixel-perfect rendering at all display densities without
+network round trips.
+
+\textbf{Design rationale.}
+\begin{itemize}
+  \item \textit{Jakob's Law (L8):} Framing Lucid relative to Gmail explicitly transfers the
+        user's existing mental model. Slide 1 lists every familiar affordance alongside the
+        specific improvement Lucid makes — reducing re-learning to zero.
+  \item \textit{Reduce STM Load (S8):} Five short slides present one idea each. Chunking
+        (Miller's Law) keeps working memory within its 7 ± 2 capacity.
+  \item \textit{Blurred backdrop — figure/ground (G3/G7):} The defocused inbox behind the
+        modal establishes the modal as figure and the inbox as ground, creating clear visual
+        hierarchy without hiding the spatial context of where the user has arrived.
+  \item \textit{Liking (P2):} The illustrated, conversational tone of the tutorial increases
+        affinity with the product before the user has written a single email (Cialdini's
+        Liking principle — people respond positively to things that feel personal and warm).
+  \item \textit{Skip affordance:} A ``Skip'' button is always visible in the top-right corner
+        of the modal, honouring user autonomy (N3 User Control) and avoiding the dark pattern
+        of forced onboarding flows.
+  \item \textit{Progressive dots + Back navigation:} Dot indicators (current slide
+        highlighted in brand blue, others in \texttt{var(--gray-200)}) communicate position
+        within the sequence without requiring the user to count slides. Back navigation
+        supports exploration rather than forcing a linear path.
+  \item \textit{One-time display:} The flag is stored in \texttt{localStorage} rather than
+        a session variable, so returning users are never shown the tutorial again — respecting
+        their expertise and eliminating the patronising repetition that plagues many web apps.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{login_gmail.jpg}
+  \caption{Onboarding Slide 1: Gmail vs.\ Lucid comparison --- familiar affordances listed alongside specific improvements}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{feedback4.jpg}
+  \caption{Onboarding Slide 4: Undo anything, anytime --- contrasting Lucid's persistent undo with Gmail's 30-second window}
+\end{figure}
+
+% ── 12.4 ───────────────────────────────────────────────────────
+\section{Loading State Sequence Summary}
+
+The three loading surfaces form a deliberate \textbf{temporal funnel}:
+
+\begin{center}
+\begin{tabular}{@{}clll@{}}
+  \toprule
+  \textbf{Phase} & \textbf{Surface} & \textbf{Duration} & \textbf{User state} \\
+  \midrule
+  1 & Login loading screen (wordmark fill) & $\approx$2.2 s & Authenticating     \\
+  2 & Inbox skeleton (full layout shimmer) & $\approx$1.3 s & App bootstrapping  \\
+  3 & Onboarding tutorial (blurred modal)  & User-controlled & First-run only     \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+Each phase has a distinct visual language — brand wordmark animation, structural skeleton,
+contextual modal — so the user always knows \textit{why} they are waiting and \textit{what}
+comes next. Together they transform an unavoidable delay into a designed moment that builds
+brand familiarity, transfers mental models, and sets expectations before the user sends
+their first email.
+
+% ══════════════════════════════════════════════════════════════
+\chapter*{References}
+\addcontentsline{toc}{chapter}{References}
+% ══════════════════════════════════════════════════════════════
+
+\begin{itemize}[leftmargin=*, itemsep=6pt]
+  \item Shneiderman, B. (1987). \textit{Designing the User Interface}. Addison-Wesley.
+  \item Nielsen, J. (1994). ``10 Usability Heuristics for User Interface Design.''
+        Nielsen Norman Group.
+  \item Norman, D. A. (1988). \textit{The Design of Everyday Things}. Basic Books.
+  \item Miller, G. A. (1956). ``The Magical Number Seven, Plus or Minus Two.''
+        \textit{Psychological Review}, 63(2), 81--97.
+  \item Fitts, P. M. (1954). ``The Information Capacity of the Human Motor System.''
+        \textit{Journal of Experimental Psychology}, 47(6), 381--391.
+  \item Hick, W. E. (1952). ``On the Rate of Gain of Information.''
+        \textit{Quarterly Journal of Experimental Psychology}, 4(1), 11--26.
+  \item Gestalt Psychology — Wertheimer, M.; Koffka, K.; Köhler, W. (1920s–1930s).
+        Various publications in \textit{Psychologische Forschung}.
+  \item Krug, S. (2000). \textit{Don't Make Me Think}. New Riders.
+  \item Raskin, J. (2000). \textit{The Humane Interface}. Addison-Wesley.
+  \item Cialdini, R. B. (1984). \textit{Influence: The Psychology of Persuasion}. Harper Business.
+  \item Tesler, L. (1980). ``A Personal Computer for Children of All Ages.''
+        Proceedings of ACM 1980.
+  \item Pareto, V. (1896). \textit{Cours d'Économie Politique}. Droz.
+  \item Nielsen, J. (2014). ``Password Masking: Privacy, Not Security.''
+        Nielsen Norman Group.
+  \item Apple Inc. (2023). \textit{Human Interface Guidelines}. Apple Developer.
+  \item Story, M. F. (1998). ``Maximising Usability: The Principles of Universal Design.''
+        \textit{Assistive Technology}, 10(1), 4--12.
+  \item HCI Exam Reference Guide (2026). Course slide compilation.
+\end{itemize}
+
+\end{document}
