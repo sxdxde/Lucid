@@ -588,3 +588,14 @@ export function IconTask({ className = 'w-4 h-4', style }: IconProps) {
     </svg>
   );
 }
+
+// HCI: D6 Affordance — circular arrow universally signals "refresh / reload"
+// HCI: S3 Informative Feedback — icon spins during reload to signal system activity
+export function IconRefresh({ className = 'w-4 h-4', style }: IconProps) {
+  return (
+    <svg className={className} style={style} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 10a7 7 0 11-1.5-4.33" />
+      <path d="M17 2v4h-4" />
+    </svg>
+  );
+}
