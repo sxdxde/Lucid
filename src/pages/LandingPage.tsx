@@ -415,6 +415,7 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
   const [tab,      setTab]      = useState<'email'|'google'|'github'>('email');
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [emailErr, setEmailErr] = useState('');
   const [passErr,  setPassErr]  = useState('');
   const [loading,  setLoading]  = useState(false);
@@ -481,16 +482,34 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
                 />
                 {emailErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{emailErr}</p>}
               </div>
-              <div style={{ marginBottom: 20 }}>
+              <div style={{ marginBottom: 20, position: 'relative' }}>
                 <input
-                  type="text"
-                  placeholder="Password (visible)"
+                  type={showPassword ? "text" : "password"}
+                  placeholder={showPassword ? "Password (visible)" : "Password"}
                   value={password}
                   onChange={e => { setPassword(e.target.value); setPassErr(''); }}
-                  style={{ width: '100%', padding: '13px 16px', fontSize: '.9375rem', border: `1.5px solid ${passErr ? '#d93025' : '#dadce0'}`, borderRadius: 10, outline: 'none', fontFamily: 'inherit', color: '#202124', boxSizing: 'border-box', background: '#fff', transition: 'border-color 120ms', letterSpacing: '.05em' }}
+                  style={{ width: '100%', padding: '13px 44px 13px 16px', fontSize: '.9375rem', border: `1.5px solid ${passErr ? '#d93025' : '#dadce0'}`, borderRadius: 10, outline: 'none', fontFamily: 'inherit', color: '#202124', boxSizing: 'border-box', background: '#fff', transition: 'border-color 120ms', letterSpacing: showPassword ? 'normal' : '.05em' }}
                   onFocus={e => !passErr && (e.target.style.borderColor = '#1a73e8')}
                   onBlur={e => !passErr && (e.target.style.borderColor = '#dadce0')}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '12px', top: '13px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5f6368' }}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  )}
+                </button>
                 {passErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{passErr}</p>}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
