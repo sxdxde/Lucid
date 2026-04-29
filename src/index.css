@@ -1137,6 +1137,8 @@ body {
 @keyframes toast-out { from { opacity:1 } to { opacity:0; transform: translateY(8px) } }
 .toast-enter { animation: toast-in  .22s cubic-bezier(.22,1,.36,1) forwards; }
 .toast-exit  { animation: toast-out .18s ease-in forwards; }
+.toast-enter,
+.toast-exit  { background: #3c4043 !important; color: #ffffff !important; }
 
 /* ── Skeleton ───────────────────────────────────────────── */
 @keyframes sk-pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
@@ -1576,10 +1578,10 @@ html.dark {
   --surface-active: #1e3a5f;
   --border:         #3c3f43;
   --border-strong:  #565a5f;
-  --text-primary:   #e8eaed;
-  --text-secondary: #bdc1c6;
-  --text-muted:     #80868b;
-  --text-placeholder: #5f6368;
+  --text-primary:   #ffffff;
+  --text-secondary: #ffffff;
+  --text-muted:     #e8eaed;
+  --text-placeholder: #9aa0a6;
 
   --gray-0:   #1e1f20;
   --gray-25:  #202124;

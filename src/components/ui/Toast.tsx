@@ -36,11 +36,11 @@ function Toast({ toast }: { toast: ToastType }) {
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '12px 14px',
-        background: 'var(--gray-900)',
+        background: '#3c4043',
         borderRadius: 'var(--radius-md)',
-        boxShadow: 'var(--shadow-lg)',
+        boxShadow: '0 4px 16px rgba(0,0,0,.35)',
         minWidth: 260, maxWidth: 380,
-        color: 'white',
+        color: '#fff',
       }}
       role="status"
       aria-live="polite"
@@ -62,8 +62,8 @@ function Toast({ toast }: { toast: ToastType }) {
         onClick={() => dismissToast(toast.id)}
         style={{
           width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          borderRadius: 4, border: 'none', background: 'rgba(255,255,255,.1)',
-          cursor: 'pointer', color: 'var(--gray-400)', flexShrink: 0,
+          borderRadius: 4, border: 'none', background: 'rgba(255,255,255,.12)',
+          cursor: 'pointer', color: 'rgba(255,255,255,.7)', flexShrink: 0,
         }}
         aria-label="Dismiss"
       >
