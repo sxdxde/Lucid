@@ -2133,6 +2133,144 @@ before the email list begins).
   \caption{Issue 12 --- Welcome Header with Live Stats: unread, sent, and draft counters visible without folder navigation}
 \end{figure}
 
+%─────────────────────────────────────────────────
+\section{Issue 13 — Gmail's Reload Gives No Feedback or Closure}
+
+\begin{gmailIssueBox}{Gmail Issue: Silent Reload — No Status Signal}
+  Gmail's reload button (the circular-arrow icon next to the select-all checkbox)
+  produces no loading indicator on click. On a first press it sometimes shows a
+  one-frame spinner, but gives no closure message on completion. Subsequent presses
+  produce nothing at all. Users are left uncertain whether the reload occurred,
+  whether any new mail arrived, and whether the system is still working.
+  This is a textbook violation of Nielsen's Heuristic 1 (Visibility of System Status).
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Three-Phase Reload with Full Closure}
+  Lucid's reload is designed with three distinct HCI-grounded phases:
+  \begin{enumerate}[leftmargin=*, itemsep=2pt]
+    \item \textbf{Immediate icon feedback (S3):} The \texttt{IconRefresh} circular-arrow
+          icon begins spinning at 0.75s/revolution the moment the button is clicked,
+          signalling that work has begun — zero ambiguity about whether the press registered.
+    \item \textbf{Skeleton loading rows (G1 Closure):} The email list is replaced by
+          eight animated skeleton rows in the exact proportions of real email rows
+          (avatar circle, sender bar, preview bar, timestamp bar). The brain perceives
+          the incoming content before it arrives, eliminating the disorienting blank-page
+          flash.
+    \item \textbf{Closure toast on completion (S4):} When the reload finishes, a
+          contextual toast fires — \textit{``Inbox up to date · N unread''} if unread
+          messages exist, or \textit{``All caught up — no new messages''} otherwise.
+          This is a specific, factual outcome statement, not a generic ``Done.'' The user
+          knows the exact result without looking anywhere else.
+  \end{enumerate}
+  A 3-second cooldown (N5 Error Prevention) prevents accidental double-fires that
+  would flood the interface with overlapping skeleton states. The button uses
+  \texttt{aria-label} that dynamically updates to ``Checking for new mail\ldots''
+  during the reload — supporting screen-reader users (U1 Equitable Use).
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S3 (Informative Feedback — spin icon + ``Checking'' toast),
+S4 (Closure — outcome toast after reload completes),
+G1 (Closure/Reification — skeleton rows anticipate real content),
+N1 (Visibility of System Status — every phase is visible),
+N5 (Error Prevention — 3-second cooldown),
+D6 (Affordance — circular-arrow universally signals reload),
+L3 (Fitts' Law — button adjacent to label in header's F-pattern zone),
+U1 (Equitable Use — dynamic aria-label for screen readers).
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{images/reload_func_1.png}
+    \caption*{\textit{Phase 1\,\&\,2 --- Spin icon + skeleton rows:}\\
+    ``Checking for new mail\ldots'' toast fires immediately;\\ email list replaced by animated skeleton rows (G1, S3).}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{images/reload_func_2.png}
+    \caption*{\textit{Phase 3 --- Closure toast:}\\
+    ``Inbox up to date \textperiodcentered\ 17 unread'' \\ confirms the exact outcome (S4, N1).}
+  \end{minipage}
+  \caption{Issue 13 --- Lucid's three-phase reload: skeleton loading state (left) and closure toast on completion (right). Gmail provides neither.}
+\end{figure}
+
+
+%─────────────────────────────────────────────────
+\section{Issue 14 — Gmail's Stats Header Is Purely Decorative}
+
+\begin{gmailIssueBox}{Gmail Issue: Non-Interactive Status Information}
+  Gmail provides no at-a-glance overview of account state (unread count, today's
+  sent count, draft count) without manual folder navigation. Even if such counts
+  were displayed, clicking them in Gmail performs no action — information is
+  presented but not made actionable. This creates unnecessary cognitive load:
+  users who want to jump to unread mail must navigate to Inbox and scroll,
+  and those who want to check today's sent mail must click the Sent folder and
+  mentally filter by date.
+\end{gmailIssueBox}
+
+\begin{lucidSolutionBox}{Lucid Solution: Actionable Stat Badges with Instant Drill-Down}
+  Lucid's Welcome Header displays three interactive stat badges, each triggering
+  a context-appropriate action:
+
+  \begin{itemize}[leftmargin=*, itemsep=4pt]
+    \item \textbf{Unread badge} — Shows the current unread count in brand blue.
+          Clicking it applies an \textit{unread-only filter} to the inbox without
+          navigating away from it. The badge turns blue with a border (N1 Visibility)
+          and the label changes to ``Unread ✕'' to signal the active state.
+          A dismissable chip (``Unread only ×'') appears in the list header as an
+          always-visible escape hatch (S7 Locus of Control, N3 User Control).
+          Clicking the badge again, clicking the chip, or navigating away all
+          revert the filter — matching users' expected reversibility (S5).
+
+    \item \textbf{Sent badge} — Shows only \textit{today's} sent count, not a
+          cumulative all-time figure. This matches the user's mental model
+          (N2 Match Real World — ``How many did I send today?'' not ``How many
+          have I ever sent?''). Clicking navigates to the Sent folder pre-filtered
+          to today, with the list header reading ``Sent · Today (today only)''.
+          A ``Today only ×'' chip clears the filter to reveal all sent mail.
+
+    \item \textbf{Drafts badge} — Shows the current draft count. Clicking navigates
+          directly to the Drafts folder — one click from the inbox instead of two
+          (sidebar click).
+  \end{itemize}
+\end{lucidSolutionBox}
+
+\textbf{Principle citations:} S7 (Locus of Control — user activates and reverts
+filters at will), N1 (Visibility — active filter state reflected in badge colour
+and chip), N3 (User Control and Freedom — escape hatch always one click away),
+N2 (Match Real World — Sent badge shows today's count, not lifetime total),
+N7 (Flexibility and Efficiency — one-click drill-down vs. two-click sidebar navigation),
+S8 (Reduce STM Load — no need to remember folder names or navigate to find counts),
+L7 (Zipf's Least Effort — maximum information with minimum clicks).
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{images/stat_1.png}
+    \caption*{\textbf{Unread badge (active)}\\
+    Badge highlights blue; list header reads ``Inbox --- Unread'';
+    dismissable ``Unread only \texttimes'' chip is the escape hatch (S7, N3, N1).}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{images/stat_2.png}
+    \caption*{\textbf{Sent badge --- Today filter}\\
+    Navigates to Sent pre-filtered to today; header reads ``Sent \textperiodcentered\ Today (today only)''; ``Today only \texttimes'' chip clears filter (N2, L7).}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{images/stat_3.png}
+    \caption*{\textbf{Drafts badge}\\
+    One click from inbox to Drafts folder; count surfaced without folder navigation (S8, N7).}
+  \end{minipage}
+  \caption{Issue 14 --- Actionable stat badges: unread-only filter with revert chip (left), sent-today scoped view (centre), and direct Drafts navigation (right). All three replace two-click sidebar navigation with a single badge press.}
+\end{figure}
+
+
 % ══════════════════════════════════════════════════════════════
 \chapter{User Support Design}
 % ══════════════════════════════════════════════════════════════
@@ -2340,6 +2478,10 @@ governing principle:
   Guest demo mode              & Zero-friction evaluation path                       & W2, P5\\
   Social proof + testimonials  & Build trust before commitment                       & P5, P2\\
   Footer: Privacy Terms Help   & Standard web conventions                            & L8, W9\\
+  Reload button (3-phase)      & Spin icon + skeleton rows + closure toast          & S3, S4, G1, N1\\
+  Stat badge — Unread filter   & One-click inbox drill-down; dismissable chip to revert & S7, N3, N1\\
+  Stat badge — Sent today      & Badge count = today only; filter pre-applied on click   & N2, L7, S8\\
+  Stat badge — Drafts nav      & One-click jump to Drafts; counts surface without nav & S8, N7\\
   \bottomrule
 \end{tabularx}
 \caption{Master feature-to-principle mapping}
