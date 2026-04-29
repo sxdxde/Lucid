@@ -412,31 +412,61 @@ interface LoginFlowProps {
 }
 
 function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
-  const [tab,      setTab]      = useState<'email'|'google'|'github'>('email');
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [emailErr, setEmailErr] = useState('');
-  const [passErr,  setPassErr]  = useState('');
-  const [loading,  setLoading]  = useState(false);
+  const [tab,       setTab]       = useState<'email'|'google'|'github'|'signup'>('email');
+  const [name,      setName]      = useState('');
+  const [email,     setEmail]     = useState('');
+  const [password,  setPassword]  = useState('');
+  const [nameErr,   setNameErr]   = useState('');
+  const [emailErr,  setEmailErr]  = useState('');
+  const [passErr,   setPassErr]   = useState('');
+  const [loading,   setLoading]   = useState(false);
 
-  const firstName   = (email.split('@')[0]?.split('.')[0] ?? 'User');
-  const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  // Social flows ask for name in a second step
+  const [socialStep, setSocialStep] = useState<'pick'|'name'>('pick');
+  const [socialName, setSocialName] = useState('');
+  const [socialNameErr, setSocialNameErr] = useState('');
+
+  const inputStyle = (err: string): React.CSSProperties => ({
+    width: '100%', padding: '13px 16px', fontSize: '.9375rem', boxSizing: 'border-box',
+    border: `1.5px solid ${err ? '#d93025' : '#dadce0'}`, borderRadius: 10, outline: 'none',
+    fontFamily: 'inherit', color: '#202124', background: '#fff', transition: 'border-color 120ms',
+  });
 
   const handleEmailLogin = (e: React.FormEvent) => {
     e.preventDefault();
     let ok = true;
-    if (!email.trim() || !email.includes('@')) { setEmailErr('Enter a valid email address'); ok = false; }
-    if (!password.trim()) { setPassErr('Enter your password'); ok = false; }
+    if (!name.trim())                              { setNameErr('Enter your name');             ok = false; }
+    if (!email.trim() || !email.includes('@'))     { setEmailErr('Enter a valid email');        ok = false; }
+    if (!password.trim())                          { setPassErr('Enter your password');         ok = false; }
     if (!ok) return;
     setLoading(true);
-    setTimeout(() => { setLoading(false); onSuccess(displayName); }, 1100);
+    setTimeout(() => { setLoading(false); onSuccess(name.trim()); }, 1100);
   };
 
-  const handleSocial = (_provider: string) => {
+  const handleSignup = (e: React.FormEvent) => {
+    e.preventDefault();
+    let ok = true;
+    if (!name.trim())                              { setNameErr('Enter your name');             ok = false; }
+    if (!email.trim() || !email.includes('@'))     { setEmailErr('Enter a valid email');        ok = false; }
+    if (!password.trim())                          { setPassErr('Choose a password');           ok = false; }
+    if (!ok) return;
     setLoading(true);
-    setTimeout(() => { setLoading(false); onSuccess('Sudarshan'); }, 1300);
+    setTimeout(() => { setLoading(false); onSuccess(name.trim()); }, 1100);
   };
+
+  const handleSocialPick = (pickedName: string) => {
+    setSocialName(pickedName);
+    setSocialStep('name');
+  };
+
+  const handleSocialConfirm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!socialName.trim()) { setSocialNameErr('Enter your name'); return; }
+    setLoading(true);
+    setTimeout(() => { setLoading(false); onSuccess(socialName.trim()); }, 1000);
+  };
+
+  const isSignMode = tab === 'signup';
 
   return (
     <div
@@ -444,142 +474,229 @@ function LoginModal({ onSuccess, onClose }: LoginFlowProps) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 440, boxShadow: '0 32px 80px rgba(0,0,0,.25)', overflow: 'hidden', animation: 'loginPop .28s cubic-bezier(.22,1,.36,1)' }}>
+
+        {/* Header */}
         <div style={{ padding: '36px 44px 0', textAlign: 'center' }}>
           <LucidWordmark size="md" />
-          <h2 style={{ margin: '20px 0 4px', fontSize: '1.375rem', fontWeight: 800, color: '#202124', letterSpacing: '-.025em' }}>Sign in to Lucid</h2>
-          <p style={{ margin: '0 0 24px', fontSize: '.875rem', color: '#5f6368' }}>Choose how you'd like to continue</p>
+          <h2 style={{ margin: '20px 0 4px', fontSize: '1.375rem', fontWeight: 800, color: '#202124', letterSpacing: '-.025em' }}>
+            {isSignMode ? 'Create your account' : 'Sign in to Lucid'}
+          </h2>
+          <p style={{ margin: '0 0 24px', fontSize: '.875rem', color: '#5f6368' }}>
+            {isSignMode ? 'Fill in your details to get started' : "Choose how you'd like to continue"}
+          </p>
 
-          <div style={{ display: 'flex', background: '#f1f3f4', borderRadius: 12, padding: 4, gap: 2, marginBottom: 24 }}>
-            {([['email','Email & Password'],['google','Google'],['github','GitHub']] as const).map(([id, label]) => (
-              <button
-                key={id}
-                onClick={() => setTab(id)}
-                style={{
-                  flex: 1, padding: '8px 4px', borderRadius: 9, border: 'none', cursor: 'pointer',
-                  fontFamily: 'inherit', fontSize: '.8125rem', fontWeight: tab === id ? 700 : 400,
-                  background: tab === id ? 'white' : 'transparent',
-                  color: tab === id ? '#1a73e8' : '#5f6368',
-                  boxShadow: tab === id ? '0 1px 4px rgba(0,0,0,.12)' : 'none',
-                  transition: 'all 150ms',
-                }}
-              >{label}</button>
-            ))}
-          </div>
+          {!isSignMode && (
+            <div style={{ display: 'flex', background: '#f1f3f4', borderRadius: 12, padding: 4, gap: 2, marginBottom: 24 }}>
+              {([['email','Email'],['google','Google'],['github','GitHub']] as const).map(([id, label]) => (
+                <button key={id} onClick={() => { setTab(id); setSocialStep('pick'); }}
+                  style={{
+                    flex: 1, padding: '8px 4px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                    fontFamily: 'inherit', fontSize: '.8125rem', fontWeight: tab === id ? 700 : 400,
+                    background: tab === id ? 'white' : 'transparent',
+                    color: tab === id ? '#1a73e8' : '#5f6368',
+                    boxShadow: tab === id ? '0 1px 4px rgba(0,0,0,.12)' : 'none',
+                    transition: 'all 150ms',
+                  }}
+                >{label}</button>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Body */}
         <div style={{ padding: '0 44px 36px' }}>
+
+          {/* ── Email sign-in ── */}
           {tab === 'email' && (
             <form onSubmit={handleEmailLogin}>
               <div style={{ marginBottom: 12 }}>
-                <input
-                  type="email" autoFocus
-                  placeholder="Email address"
-                  value={email}
-                  onChange={e => { setEmail(e.target.value); setEmailErr(''); }}
-                  style={{ width: '100%', padding: '13px 16px', fontSize: '.9375rem', border: `1.5px solid ${emailErr ? '#d93025' : '#dadce0'}`, borderRadius: 10, outline: 'none', fontFamily: 'inherit', color: '#202124', boxSizing: 'border-box', background: '#fff', transition: 'border-color 120ms' }}
+                <input autoFocus type="text" placeholder="Your name"
+                  value={name} onChange={e => { setName(e.target.value); setNameErr(''); }}
+                  style={inputStyle(nameErr)}
+                  onFocus={e => !nameErr && (e.target.style.borderColor = '#1a73e8')}
+                  onBlur={e => !nameErr && (e.target.style.borderColor = '#dadce0')}
+                />
+                {nameErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{nameErr}</p>}
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <input type="email" placeholder="Email address"
+                  value={email} onChange={e => { setEmail(e.target.value); setEmailErr(''); }}
+                  style={inputStyle(emailErr)}
                   onFocus={e => !emailErr && (e.target.style.borderColor = '#1a73e8')}
                   onBlur={e => !emailErr && (e.target.style.borderColor = '#dadce0')}
                 />
                 {emailErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{emailErr}</p>}
               </div>
-              <div style={{ marginBottom: 20, position: 'relative' }}>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder={showPassword ? "Password (visible)" : "Password"}
-                  value={password}
-                  onChange={e => { setPassword(e.target.value); setPassErr(''); }}
-                  style={{ width: '100%', padding: '13px 44px 13px 16px', fontSize: '.9375rem', border: `1.5px solid ${passErr ? '#d93025' : '#dadce0'}`, borderRadius: 10, outline: 'none', fontFamily: 'inherit', color: '#202124', boxSizing: 'border-box', background: '#fff', transition: 'border-color 120ms', letterSpacing: showPassword ? 'normal' : '.05em' }}
+              <div style={{ marginBottom: 20 }}>
+                <input type="text" placeholder="Password"
+                  value={password} onChange={e => { setPassword(e.target.value); setPassErr(''); }}
+                  style={inputStyle(passErr)}
                   onFocus={e => !passErr && (e.target.style.borderColor = '#1a73e8')}
                   onBlur={e => !passErr && (e.target.style.borderColor = '#dadce0')}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{ position: 'absolute', right: '12px', top: '13px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5f6368' }}
-                  title={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  )}
-                </button>
                 {passErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{passErr}</p>}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <a href="#" style={{ fontSize: '.8125rem', color: '#1a73e8', textDecoration: 'none' }}>Forgot password?</a>
-                <a href="#" style={{ fontSize: '.8125rem', color: '#1a73e8', textDecoration: 'none' }}>Create account</a>
+                <button type="button" onClick={() => { setTab('signup'); setName(''); setEmail(''); setPassword(''); setNameErr(''); setEmailErr(''); setPassErr(''); }}
+                  style={{ fontSize: '.8125rem', color: '#1a73e8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}
+                >Create account</button>
               </div>
-              <button
-                type="submit" disabled={loading}
+              <button type="submit" disabled={loading}
                 style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: loading ? '#669df6' : '#1a73e8', color: 'white', fontSize: '.9375rem', fontWeight: 700, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 120ms' }}
               >
-                {loading
-                  ? <><span style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin .7s linear infinite', display: 'inline-block' }} />Signing in…</>
-                  : 'Sign in'
-                }
+                {loading ? <><span style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin .7s linear infinite', display: 'inline-block' }} />Signing in…</> : 'Sign in'}
               </button>
             </form>
           )}
 
+          {/* ── Create account ── */}
+          {tab === 'signup' && (
+            <form onSubmit={handleSignup}>
+              <div style={{ marginBottom: 12 }}>
+                <input autoFocus type="text" placeholder="Your name"
+                  value={name} onChange={e => { setName(e.target.value); setNameErr(''); }}
+                  style={inputStyle(nameErr)}
+                  onFocus={e => !nameErr && (e.target.style.borderColor = '#1a73e8')}
+                  onBlur={e => !nameErr && (e.target.style.borderColor = '#dadce0')}
+                />
+                {nameErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{nameErr}</p>}
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <input type="email" placeholder="Email address"
+                  value={email} onChange={e => { setEmail(e.target.value); setEmailErr(''); }}
+                  style={inputStyle(emailErr)}
+                  onFocus={e => !emailErr && (e.target.style.borderColor = '#1a73e8')}
+                  onBlur={e => !emailErr && (e.target.style.borderColor = '#dadce0')}
+                />
+                {emailErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{emailErr}</p>}
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <input type="text" placeholder="Choose a password"
+                  value={password} onChange={e => { setPassword(e.target.value); setPassErr(''); }}
+                  style={inputStyle(passErr)}
+                  onFocus={e => !passErr && (e.target.style.borderColor = '#1a73e8')}
+                  onBlur={e => !passErr && (e.target.style.borderColor = '#dadce0')}
+                />
+                {passErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{passErr}</p>}
+              </div>
+              <button type="submit" disabled={loading}
+                style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: loading ? '#669df6' : '#1a73e8', color: 'white', fontSize: '.9375rem', fontWeight: 700, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 120ms', marginBottom: 10 }}
+              >
+                {loading ? <><span style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin .7s linear infinite', display: 'inline-block' }} />Creating account…</> : 'Create account'}
+              </button>
+              <button type="button" onClick={() => { setTab('email'); setName(''); setEmail(''); setPassword(''); setNameErr(''); setEmailErr(''); setPassErr(''); }}
+                style={{ width: '100%', padding: '11px', borderRadius: 10, border: '1.5px solid #dadce0', background: 'transparent', color: '#5f6368', fontSize: '.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 120ms' }}
+                onMouseOver={e => (e.currentTarget.style.background = '#f8f9fa')}
+                onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+              >Back to sign in</button>
+            </form>
+          )}
+
+          {/* ── Google ── */}
           {tab === 'google' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ margin: '0 0 16px', fontSize: '.875rem', color: '#5f6368', textAlign: 'center' }}>
-                Continue with your Google account. We'll never post without your permission.
-              </p>
-              {['sudarshan@gmail.com','work@gmail.com'].map(acc => (
-                <button key={acc} onClick={() => handleSocial('google')}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 10, border: '1.5px solid #dadce0', background: 'white', cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'all 100ms', width: '100%', textAlign: 'left' }}
-                  onMouseOver={e => (e.currentTarget.style.background = '#f8f9fa')}
-                  onMouseOut={e => (e.currentTarget.style.background = 'white')}
-                >
-                  <GoogleIcon />
-                  <div>
-                    <div style={{ fontSize: '.875rem', fontWeight: 600, color: '#202124' }}>Continue as {acc.split('@')[0]}</div>
-                    <div style={{ fontSize: '.75rem', color: '#5f6368' }}>{acc}</div>
+              {socialStep === 'pick' ? (
+                <>
+                  <p style={{ margin: '0 0 8px', fontSize: '.875rem', color: '#5f6368', textAlign: 'center' }}>
+                    Choose a Google account to continue.
+                  </p>
+                  {[{email:'demo@gmail.com',label:'Demo Account'},{email:'work@gmail.com',label:'Work Account'}].map(acc => (
+                    <button key={acc.email} onClick={() => handleSocialPick(acc.label.split(' ')[0])}
+                      style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 10, border: '1.5px solid #dadce0', background: 'white', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 100ms', width: '100%', textAlign: 'left' }}
+                      onMouseOver={e => (e.currentTarget.style.background = '#f8f9fa')}
+                      onMouseOut={e => (e.currentTarget.style.background = 'white')}
+                    >
+                      <GoogleIcon />
+                      <div>
+                        <div style={{ fontSize: '.875rem', fontWeight: 600, color: '#202124' }}>{acc.label}</div>
+                        <div style={{ fontSize: '.75rem', color: '#5f6368' }}>{acc.email}</div>
+                      </div>
+                      <span style={{ marginLeft: 'auto', fontSize: '.75rem', color: '#9aa0a6' }}>›</span>
+                    </button>
+                  ))}
+                  <button onClick={() => onSuccess('User')}
+                    style={{ padding: '12px', borderRadius: 10, border: '1.5px solid #dadce0', background: 'transparent', color: '#5f6368', fontSize: '.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 120ms', marginTop: 4 }}
+                    onMouseOver={e => (e.currentTarget.style.background = '#f8f9fa')}
+                    onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                  >Continue as Guest (Demo)</button>
+                </>
+              ) : (
+                <form onSubmit={handleSocialConfirm}>
+                  <p style={{ margin: '0 0 16px', fontSize: '.875rem', color: '#5f6368', textAlign: 'center' }}>
+                    What should we call you?
+                  </p>
+                  <div style={{ marginBottom: 16 }}>
+                    <input autoFocus type="text" placeholder="Your name"
+                      value={socialName} onChange={e => { setSocialName(e.target.value); setSocialNameErr(''); }}
+                      style={inputStyle(socialNameErr)}
+                      onFocus={e => !socialNameErr && (e.target.style.borderColor = '#1a73e8')}
+                      onBlur={e => !socialNameErr && (e.target.style.borderColor = '#dadce0')}
+                    />
+                    {socialNameErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{socialNameErr}</p>}
                   </div>
-                  <span style={{ marginLeft: 'auto', fontSize: '.75rem', color: '#9aa0a6' }}>›</span>
-                </button>
-              ))}
-              {loading && (
-                <div style={{ textAlign: 'center', color: '#5f6368', fontSize: '.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <span style={{ width: 16, height: 16, border: '2px solid #dadce0', borderTopColor: '#1a73e8', borderRadius: '50%', animation: 'spin .7s linear infinite', display: 'inline-block' }} />
-                  Connecting to Google…
-                </div>
+                  <button type="submit" disabled={loading}
+                    style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: loading ? '#669df6' : '#1a73e8', color: 'white', fontSize: '.9375rem', fontWeight: 700, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 120ms', marginBottom: 10 }}
+                  >
+                    {loading ? <><span style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin .7s linear infinite', display: 'inline-block' }} />Signing in…</> : 'Continue'}
+                  </button>
+                  <button type="button" onClick={() => setSocialStep('pick')}
+                    style={{ width: '100%', padding: '11px', borderRadius: 10, border: '1.5px solid #dadce0', background: 'transparent', color: '#5f6368', fontSize: '.875rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 120ms' }}
+                    onMouseOver={e => (e.currentTarget.style.background = '#f8f9fa')}
+                    onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                  >Back</button>
+                </form>
               )}
             </div>
           )}
 
+          {/* ── GitHub ── */}
           {tab === 'github' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ margin: '0 0 16px', fontSize: '.875rem', color: '#5f6368', textAlign: 'center' }}>
-                Sign in with your GitHub account. Lucid will only request your email address.
-              </p>
-              <button
-                onClick={() => handleSocial('github')} disabled={loading}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '14px', borderRadius: 10, border: 'none', background: loading ? '#444' : '#24292e', color: 'white', fontSize: '.9375rem', fontWeight: 600, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'background 120ms' }}
-                onMouseOver={e => !loading && (e.currentTarget.style.background = '#1b1f23')}
-                onMouseOut={e => !loading && (e.currentTarget.style.background = '#24292e')}
-              >
-                {loading
-                  ? <><span style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin .7s linear infinite', display: 'inline-block' }} />Connecting…</>
-                  : <><GitHubIcon />Continue with GitHub</>
-                }
-              </button>
-              <button
-                onClick={() => onSuccess('Sudarshan')}
-                style={{ padding: '12px', borderRadius: 10, border: '1.5px solid #dadce0', background: 'transparent', color: '#5f6368', fontSize: '.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 120ms' }}
-                onMouseOver={e => e.currentTarget.style.background = '#f8f9fa'}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                Continue as Guest (Demo)
-              </button>
+              {socialStep === 'pick' ? (
+                <>
+                  <p style={{ margin: '0 0 8px', fontSize: '.875rem', color: '#5f6368', textAlign: 'center' }}>
+                    Sign in with your GitHub account.
+                  </p>
+                  <button onClick={() => handleSocialPick('')} disabled={loading}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '14px', borderRadius: 10, border: 'none', background: loading ? '#444' : '#24292e', color: 'white', fontSize: '.9375rem', fontWeight: 600, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', transition: 'background 120ms' }}
+                    onMouseOver={e => !loading && (e.currentTarget.style.background = '#1b1f23')}
+                    onMouseOut={e => !loading && (e.currentTarget.style.background = '#24292e')}
+                  >
+                    <GitHubIcon />Continue with GitHub
+                  </button>
+                  <button onClick={() => onSuccess('User')}
+                    style={{ padding: '12px', borderRadius: 10, border: '1.5px solid #dadce0', background: 'transparent', color: '#5f6368', fontSize: '.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 120ms' }}
+                    onMouseOver={e => (e.currentTarget.style.background = '#f8f9fa')}
+                    onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                  >Continue as Guest (Demo)</button>
+                </>
+              ) : (
+                <form onSubmit={handleSocialConfirm}>
+                  <p style={{ margin: '0 0 16px', fontSize: '.875rem', color: '#5f6368', textAlign: 'center' }}>
+                    What should we call you?
+                  </p>
+                  <div style={{ marginBottom: 16 }}>
+                    <input autoFocus type="text" placeholder="Your name"
+                      value={socialName} onChange={e => { setSocialName(e.target.value); setSocialNameErr(''); }}
+                      style={inputStyle(socialNameErr)}
+                      onFocus={e => !socialNameErr && (e.target.style.borderColor = '#1a73e8')}
+                      onBlur={e => !socialNameErr && (e.target.style.borderColor = '#dadce0')}
+                    />
+                    {socialNameErr && <p style={{ margin: '4px 0 0', fontSize: '.75rem', color: '#d93025' }}>{socialNameErr}</p>}
+                  </div>
+                  <button type="submit" disabled={loading}
+                    style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: loading ? '#669df6' : '#1a73e8', color: 'white', fontSize: '.9375rem', fontWeight: 700, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 120ms', marginBottom: 10 }}
+                  >
+                    {loading ? <><span style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,.35)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin .7s linear infinite', display: 'inline-block' }} />Signing in…</> : 'Continue'}
+                  </button>
+                  <button type="button" onClick={() => setSocialStep('pick')}
+                    style={{ width: '100%', padding: '11px', borderRadius: 10, border: '1.5px solid #dadce0', background: 'transparent', color: '#5f6368', fontSize: '.875rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 120ms' }}
+                    onMouseOver={e => (e.currentTarget.style.background = '#f8f9fa')}
+                    onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                  >Back</button>
+                </form>
+              )}
             </div>
           )}
         </div>
@@ -695,7 +812,7 @@ export function LandingPage({ onLogin }: { onLogin: (name: string) => void }) {
               onMouseOver={e => { e.currentTarget.style.background = '#1557b0'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
               onMouseOut={e => { e.currentTarget.style.background = '#1a73e8'; e.currentTarget.style.transform = 'none'; }}
             >Start for free</button>
-            <button onClick={() => onLogin('Demo User')}
+            <button onClick={() => onLogin('User')}
               style={{ padding: '15px 36px', borderRadius: 12, border: '1.5px solid rgba(90,55,20,.22)', background: 'rgba(255,255,255,0.7)', color: '#4a3318', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', backdropFilter: 'blur(8px)', transition: 'all 120ms' }}
               onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.92)'}
               onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.7)'}

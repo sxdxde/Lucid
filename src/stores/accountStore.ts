@@ -12,6 +12,7 @@ interface AccountStore {
   switchAccount: (id: string) => void;
   signOutAccount: (id: string) => void;
   addAccount: (name: string, email: string) => void;
+  updateAccountName: (id: string, name: string) => void;
   getActiveAccount: () => Account;
 }
 
@@ -36,6 +37,15 @@ export const useAccountStore = create<AccountStore>()(
         });
       },
 
+      updateAccountName: (id, name) => {
+        const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'U';
+        set(state => ({
+          accounts: state.accounts.map(a =>
+            a.id === id ? { ...a, name, avatar: initials } : a
+          ),
+        }));
+      },
+
       addAccount: (name, email) => {
         const COLORS = ['#6366f1','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#be185d'];
         const id = `acc-${Date.now()}`;
@@ -50,6 +60,6 @@ export const useAccountStore = create<AccountStore>()(
         return accounts.find(a => a.id === activeAccountId) ?? accounts[0];
       },
     }),
-    { name: 'clearmail-accounts' }
+    { name: 'clearmail-accounts', version: 2 }
   )
 );
